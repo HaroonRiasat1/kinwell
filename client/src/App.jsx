@@ -23,6 +23,7 @@ import AdminOverviewPage from './features/admin/AdminOverviewPage.jsx';
 import { FamiliesPage, NutritionistsPage } from './features/admin/AdminTablesPage.jsx';
 import OnboardingPage from './features/onboarding/OnboardingPage.jsx';
 import DesignSystemPage from './features/design-system/DesignSystemPage.jsx';
+import LandingPage from './features/landing/LandingPage.jsx';
 
 /** Only lets through signed-in users with one of `roles`; everyone else goes to sign in. */
 function RequireRole({ roles, children }) {
@@ -33,10 +34,11 @@ function RequireRole({ roles, children }) {
   return children;
 }
 
+/** Public website for visitors; signed-in users go straight to their area. */
 function Home() {
   const { user, ready } = useAuth();
   if (!ready) return null;
-  return <Navigate to={user ? HOME_FOR_ROLE[user.role] : '/login'} replace />;
+  return user ? <Navigate to={HOME_FOR_ROLE[user.role]} replace /> : <LandingPage />;
 }
 
 export default function App() {

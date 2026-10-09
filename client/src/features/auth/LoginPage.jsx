@@ -181,7 +181,7 @@ export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, b
   return (
     <div className="kw-backdrop" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 32, padding: 'clamp(20px, 4vw, 48px)', alignItems: 'center' }}>
       <div className="stack" style={{ '--gap': '24px', maxWidth: 560 }}>
-        <BrandMark to="/login" />
+        <BrandMark to="/" />
         <h1 style={{ fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 800, lineHeight: 1.08 }}>Know how Mom and Dad are doing, at a glance.</h1>
         <p style={{ fontSize: 20, color: 'var(--kw-ink-2)' }}>
           A nutritionist visits your parents at home. You get clear, plain-language updates wherever you live.

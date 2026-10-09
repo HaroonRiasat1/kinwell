@@ -53,7 +53,7 @@ export function OnboardingView({ step, form, setForm, nutritionists, onBack, onN
   return (
     <div className="kw-backdrop" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 32, padding: 'clamp(20px, 4vw, 48px)', alignItems: 'start' }}>
       <aside className="stack" style={{ '--gap': '20px', maxWidth: 380 }}>
-        <BrandMark to="/login" />
+        <BrandMark to="/" />
         <h1 style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.1 }}>Set up Kinwell for your family</h1>
         <p className="muted">About 5 minutes. You can change everything later.</p>
         <ol className="kw-steps stack" style={{ '--gap': '4px' }}>
