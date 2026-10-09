@@ -2,8 +2,12 @@
   "name": "kinwell",
   "version": "1.0.0",
   "private": true,
-  "description": "Kinwell — home nutrition care for parents, with updates for the family abroad. MERN stack.",
-  "workspaces": ["shared", "server", "client"],
+  "description": "Kinwell \u2014 home nutrition care for parents, with updates for the family abroad. MERN stack.",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
   "scripts": {
     "db:up": "docker compose up -d mongo",
     "db:down": "docker compose down",
@@ -17,5 +21,6 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
-  }
+  },
+  "type": "module"
 }

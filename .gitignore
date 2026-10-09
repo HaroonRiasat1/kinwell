@@ -4,3 +4,4 @@ storybook-static
 .env
 *.log
 .DS_Store
+.vercel
