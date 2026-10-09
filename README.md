@@ -3,6 +3,8 @@
 Home nutrition care for parents in Lahore, with plain-language updates for their children abroad.
 Built with the MERN stack (MongoDB, Express, React, Node) from the **Kinwell v2 · Glass** design.
 
+**Live:** https://kinwell-sepia.vercel.app (frontend and API in one Vercel project, database on MongoDB Atlas)
+
 ## Who uses it
 
 | Role | Signs in with | Lands on |
