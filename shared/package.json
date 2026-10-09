@@ -1,0 +1,8 @@
+{
+  "name": "@kinwell/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "demo-data.js",
+  "exports": { ".": "./demo-data.js", "./demo-data.js": "./demo-data.js" }
+}

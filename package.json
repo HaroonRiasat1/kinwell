@@ -1,0 +1,21 @@
+{
+  "name": "kinwell",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kinwell — home nutrition care for parents, with updates for the family abroad. MERN stack.",
+  "workspaces": ["shared", "server", "client"],
+  "scripts": {
+    "db:up": "docker compose up -d mongo",
+    "db:down": "docker compose down",
+    "seed": "npm run seed -w server",
+    "dev": "concurrently -n api,web -c teal,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "start": "npm start -w server",
+    "build": "npm run build -w client",
+    "storybook": "npm run storybook -w client",
+    "build-storybook": "npm run build-storybook -w client",
+    "test": "npm test -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

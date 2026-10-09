@@ -1,0 +1,75 @@
+/* Kinwell design system · v0.2 Glass
+   Frosted, translucent layers over a soft warm backdrop. Text always sits on a
+   solid-enough glass layer so contrast stays AA. Deep teal for trust, coral for
+   action, capsule buttons, 24–28px corners and an 18px base size (24px in the
+   parent view). */
+:root {
+  /* Color */
+  --kw-ground: #f7f3ec;
+  --kw-page: #f5f1ea;
+  --kw-surface: #fffdf9;
+  --kw-ink: #1f2a28;
+  --kw-ink-2: #3d4846;
+  --kw-muted: #4a5553;
+  --kw-teal-700: #2c6e63;
+  --kw-teal-800: #1f544b;
+  --kw-teal-100: #e2eeea;
+  --kw-teal-ink: #1f3b36;
+  --kw-coral: #e8805f;
+  --kw-coral-hover: #df6e4b;
+  --kw-rule: rgba(31, 42, 40, 0.1);
+  --kw-rule-soft: rgba(31, 42, 40, 0.08);
+  --kw-warm-line: #ebe4d8;
+  --kw-skeleton: #ece5d9;
+  --kw-skeleton-2: #f1ebe1;
+  --kw-band: #d6ecdf;
+
+  /* Status: text on its own tinted background */
+  --kw-normal: #1d6a42;
+  --kw-normal-bg: #e1f0e6;
+  --kw-normal-tint: #eef7f1;
+  --kw-watch: #7a4d00;
+  --kw-watch-bg: #fbeccb;
+  --kw-watch-tint: #fdf5e3;
+  --kw-attention: #a1241b;
+  --kw-attention-bg: #fadfdb;
+  --kw-attention-tint: #fcefec;
+
+  /* Glass */
+  --kw-glass: rgba(255, 255, 255, 0.58);
+  --kw-glass-strong: rgba(255, 255, 255, 0.8);
+  --kw-glass-soft: rgba(255, 255, 255, 0.5);
+  --kw-glass-border: rgba(255, 255, 255, 0.75);
+  --kw-glass-border-strong: rgba(255, 255, 255, 0.85);
+  --kw-blur: blur(28px) saturate(170%);
+  --kw-shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 10px 30px rgba(31, 42, 40, 0.08);
+  --kw-shadow-teal: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 18px rgba(44, 110, 99, 0.28);
+  --kw-shadow-coral: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px rgba(232, 128, 95, 0.3);
+  --kw-shadow-pill: 0 2px 10px rgba(31, 42, 40, 0.07);
+
+  /* Radius */
+  --kw-r-sm: 10px;
+  --kw-r-md: 16px;
+  --kw-r-lg: 24px;
+  --kw-r-xl: 28px;
+  --kw-r-pill: 999px;
+
+  /* Spacing scale: 4 8 12 16 24 32 48 */
+  --kw-s1: 4px;
+  --kw-s2: 8px;
+  --kw-s3: 12px;
+  --kw-s4: 16px;
+  --kw-s5: 24px;
+  --kw-s6: 32px;
+  --kw-s7: 48px;
+
+  /* Type */
+  --kw-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+  --kw-text-body: 18px;
+  --kw-text-small: 16px;
+  --kw-text-xs: 14px;
+
+  --kw-backdrop: radial-gradient(60% 50% at 8% 0%, #f8d9c8 0%, transparent 62%),
+    radial-gradient(50% 45% at 96% 12%, #cfe5de 0%, transparent 62%),
+    radial-gradient(60% 55% at 70% 100%, #e6e0f2 0%, transparent 62%), var(--kw-page);
+}
