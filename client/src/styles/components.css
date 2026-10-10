@@ -763,3 +763,25 @@ a.kw-table__row--link:hover {
   margin: 0;
   font-weight: 600;
 }
+
+/* ===== Lab report review rows ===== */
+.kw-review-row {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 1.2fr) auto minmax(0, 1.4fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+}
+@media (max-width: 720px) {
+  .kw-review-row {
+    grid-template-columns: auto 1fr auto;
+  }
+  .kw-review-row > :nth-child(3) {
+    grid-column: 2 / 4;
+  }
+  .kw-review-row > :nth-child(4) {
+    grid-column: 1 / -1;
+  }
+}

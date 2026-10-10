@@ -9,13 +9,21 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "i18n:check": "node scripts/check-locales.mjs"
+    "i18n:check": "node scripts/check-locales.mjs",
+    "ocr:assets": "node scripts/copy-ocr-assets.mjs",
+    "predev": "npm run ocr:assets",
+    "prebuild": "npm run ocr:assets",
+    "prestorybook": "npm run ocr:assets",
+    "prebuild-storybook": "npm run ocr:assets"
   },
   "dependencies": {
     "@kinwell/shared": "1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.0",

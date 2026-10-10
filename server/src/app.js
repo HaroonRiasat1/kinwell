@@ -11,7 +11,7 @@ export function createApp() {
   const app = express();
   app.use(helmet());
   app.use(cors({ origin: env.clientOrigin, allowedHeaders: ['Content-Type', 'Authorization', 'X-Language'] }));
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '1mb' })); // OCR text of a long report is well under this
   app.use(detectLanguage);
   if (env.nodeEnv !== 'test') app.use(morgan('dev'));
 

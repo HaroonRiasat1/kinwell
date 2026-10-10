@@ -27,6 +27,7 @@ import {
   weekdayIndex,
 } from '../utils/time.js';
 import { issueParentCode } from './auth.service.js';
+import { LAB_TESTS } from './labs/catalogue.js';
 import { dayLabel, label, localized, relativeDaysLabel, visitDateTime } from '../i18n/index.js';
 
 const MEAL_SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
@@ -247,22 +248,9 @@ export async function getLabs(parent) {
   return {
     markers: markers.map((m) => ({ ...markerSummary(m), meaning: m.meaning })),
     reports: reports.map((r) => ({ id: r.id, lab: r.lab, date: r.date, file: r.file, by: r.by })),
+    // Tests that can be read from a report or typed in.
+    tests: LAB_TESTS.map((t) => ({ name: t.name, unit: t.unit, range: t.range })),
   };
-}
-
-// Stores an uploaded report. Reading the numbers off a PDF/photo is done by a lab-reading
-// service that isn't part of this codebase yet, so the report is recorded as read.
-export async function addLabReport(parent, user, { fileName, lab }) {
-  const report = await LabReport.create({
-    parent: parent.id,
-    lab: lab ?? 'Uploaded report',
-    date: new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date()),
-    file: fileName,
-    by: `Uploaded by ${user.name.split(' ')[0]}`,
-    status: 'read',
-    resultsFound: await LabMarker.countDocuments({ parent: parent.id }),
-  });
-  return { id: report.id, resultsFound: report.resultsFound, file: report.file };
 }
 
 export async function getNutrition(parent) {

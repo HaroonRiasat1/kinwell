@@ -138,7 +138,7 @@ All routes are under `/api`. Everything except sign-in, onboarding and `/health`
 | Area | Routes |
 | --- | --- |
 | Auth | `POST /auth/login`, `/auth/parent-code`, `/auth/parent-code/verify`, `/auth/forgot`, `/auth/logout` (`everywhere` signs out all devices), `GET /auth/me` |
-| Parents (family, the parent, their nutritionist, admins) | `GET /parents`, `/parents/threads`, `/parents/:id/{dashboard,home,profile,labs,nutrition,supplements,visits,documents,messages}`; `PATCH /parents/:id/checklist/:code`, `/parents/:id/supplements/reminders`; `POST /parents/:id/{labs/reports,visits/reschedule,messages}` |
+| Parents (family, the parent, their nutritionist, admins) | `GET /parents`, `/parents/threads`, `/parents/:id/{dashboard,home,profile,labs,nutrition,supplements,visits,documents,messages}`; `PATCH /parents/:id/checklist/:code`, `/parents/:id/supplements/reminders`; `POST /parents/:id/{labs/read,labs/reports,labs/unreadable,visits/reschedule,messages}` |
 | Nutritionist | `GET /workspace/today`, `/workspace/inbox`, `/workspace/clients`, `/workspace/clients/:id`; `POST /workspace/clients/:id/visits` (readings validated and graded); `GET`/`PUT /workspace/clients/:id/plan`, `POST …/plan/publish`; `POST /workspace/requests/:visitId` (accept or decline a reschedule) |
 | Admin | Overview; flags (`resolve`, `reopen`, `notes`, `remind`); families (search, detail, change nutritionist, invite links); nutritionists (list, detail, create, update, leave); accounts (reset password, sign out everywhere, parent code, turn on/off); queues (unreadable lab reports, access requests); service areas; activity log |
 | Invites | `GET /auth/invites/:token`, `POST /auth/invites/accept` (the `/join/:token` page) |
@@ -152,9 +152,36 @@ With the API running (`npm run dev -w server`):
 npm test
 ```
 
-This reseeds the local database and runs 33 end-to-end tests over HTTP: every role's main flows and the
-permission boundaries between them (`server/test/e2e.test.js`). `npm run test:smoke -w server` is a
+This runs the lab-report parser tests (`server/test/readReport.test.js`, no API needed:
+`npm run test:unit -w server`), then reseeds the local database and runs 37 end-to-end tests over HTTP:
+every role's main flows and the permission boundaries between them (`server/test/e2e.test.js`). `npm run test:smoke -w server` is a
 quicker manual check that prints raw responses.
+
+## Reading lab reports (OCR)
+
+Families add a report on the Lab tests page as a PDF or a phone photo. The numbers are read **on the
+device**: the file itself is never uploaded.
+
+1. **Get the text** (`client/src/lib/ocr.js`). Digital PDFs: the text is read directly with pdf.js.
+   Scanned PDFs (up to 4 pages) and photos: rendered to a canvas, cleaned up and read with
+   Tesseract. The Tesseract worker, engine and English data are served from our own domain under
+   `/ocr` (copied by `client/scripts/copy-ocr-assets.mjs` before dev and build), so the strict
+   security policy holds; both libraries load only when someone adds a report.
+2. **Find the results** (`POST /parents/:id/labs/read`, `server/src/services/labs/readReport.js`).
+   Each line is matched against the tests in `catalogue.js` (HbA1c, fasting sugar, vitamin D, B12,
+   hemoglobin, cholesterol, triglycerides, creatinine, TSH, ferritin), using the names Pakistani
+   and overseas labs print. The parser takes the result rather than the reference range, fixes
+   common OCR slips (`1O8`, `2l,5`, `gldL`) and converts SI units (mmol/L, nmol/L, g/L…). OCR often
+   drops thin decimal points: if the printed range is 10× ours, the decimal is put back and the row
+   is marked "please check". A number that can't be real is not guessed: the test is listed empty
+   for the family to type in. Nothing is saved at this step.
+3. **Check, then save** (`POST /parents/:id/labs/reports`). The family corrects, unticks or adds
+   rows. The server re-grades every value, updates the parent's markers and trends, tells the
+   nutritionist, and flags anything that needs attention for the Kinwell team.
+4. **Can't read it?** The family can try another photo, type the results in, or send it to the
+   team (`POST /parents/:id/labs/unreadable`), which adds it to the admin's unreadable-reports queue.
+
+Results are graded with general adult ranges; have a clinician review `catalogue.js` before real use.
 
 ## Visit readings
 
@@ -166,7 +193,7 @@ have a clinician review them before real use.
 ## Not built yet
 
 - Password-reset emails. (SMS for parent codes works once Twilio keys are set; see above.)
-- Reading numbers from uploaded lab PDFs/photos: uploads are recorded, but the values aren't parsed.
+- Urdu-only lab reports: OCR reads English, which is what labs in Pakistan print results in.
 - File storage for documents and visit photos.
 - Google/Apple sign-in buttons from the design were left out until they can actually work.
 - Reschedule slots are a fixed set until the nutritionist's calendar is connected.

@@ -4,6 +4,7 @@ import { Flag, LabMarker, Message, Visit } from '../../models/index.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { dateKeyFromLabel, lahoreDateTime, todayKey } from '../../utils/time.js';
 import { MARKER_FOR, assessVitals } from '../vitals.js';
+import { recordResult } from '../labs/markers.js';
 import { ownClient } from './clients.js';
 
 const HOUR = 3600 * 1000;
@@ -12,31 +13,11 @@ const shortDay = (d) => fmt(d, { day: 'numeric', month: 'short' });
 const clock = (d) => fmt(d, { hour: 'numeric', minute: '2-digit', hour12: true }).replace(':00', '').replace(/\s?(am|pm)/i, (x) => ` ${x.trim().toLowerCase()}`);
 const fromNut = (nut) => ({ from: nut.id, fromKey: nut.name.split(' ')[0].toLowerCase(), fromName: nut.name, fromRole: 'Nutritionist' });
 
-/** Writes a home reading into the client's matching lab marker (value, status, six-month trend). */
+/** Writes a home reading into the client's matching lab marker (if they have one). */
 async function updateMarker(parentId, reading) {
   const name = MARKER_FOR[reading.label];
-  if (!name) return;
-  const m = await LabMarker.findOne({ parent: parentId, name });
-  if (!m) return;
-  const month = fmt(new Date(), { month: 'short' });
-  const series = [...m.series];
-  const months = [...(m.months ?? [])];
-  if (months.at(-1) === month) series[series.length - 1] = reading.number;
-  else {
-    series.push(reading.number);
-    months.push(month);
-  }
-  while (series.length > 6) series.shift();
-  while (months.length > series.length) months.shift();
-  const diff = Math.round((series.at(-1) - series[0]) * 10) / 10;
-  m.set({
-    value: reading.value,
-    status: reading.status,
-    series,
-    months,
-    trend: Math.abs(diff) < 1 ? 'Steady' : `${diff > 0 ? 'Up' : 'Down'} ${Math.abs(diff)} since ${months[0]}`,
-  });
-  await m.save();
+  if (!name || !(await LabMarker.exists({ parent: parentId, name }))) return;
+  await recordResult(parentId, { name, value: reading.value, number: reading.number, status: reading.status });
 }
 
 /**

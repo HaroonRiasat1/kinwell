@@ -17,7 +17,15 @@ export const checklistSchema = z.object({ done: z.boolean() });
 export const reminderSchema = z.object({ slot: z.enum(['Morning', 'Afternoon', 'Evening', 'Night']), on: z.boolean() });
 export const rescheduleSchema = z.object({ day: z.string().min(1), time: z.string().min(1) });
 export const messageSchema = z.object({ text: z.string().trim().min(1, 'Write a message first').max(4000) });
-export const uploadSchema = z.object({ fileName: z.string().trim().min(1), lab: z.string().trim().optional() });
+export const readReportSchema = z.object({ text: z.string().max(200_000) });
+export const saveReportSchema = z.object({
+  fileName: z.string().trim().min(1).max(200),
+  lab: z.string().trim().max(120).optional(),
+  date: z.string().trim().max(40).optional(),
+  source: z.enum(['ocr', 'pdf', 'manual']).default('ocr'),
+  results: z.array(z.object({ name: z.string().trim().min(1), value: z.union([z.string(), z.number()]) })).max(40),
+});
+export const unreadableSchema = z.object({ fileName: z.string().trim().min(1).max(200), reason: z.string().trim().max(200).optional() });
 
 export const visitLogSchema = z.object({
   title: z.string().trim().optional(),

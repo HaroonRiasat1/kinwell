@@ -17,8 +17,10 @@ export const DashboardEmpty = { render: () => <S.Dashboard status="empty" />, na
 export const DashboardError = { render: () => <S.Dashboard status="error" />, name: 'Family / Dashboard – error' };
 export const Profile = { ...parentArg, render: (a) => <S.Overview {...a} />, name: 'Family / Profile' };
 export const Labs = { ...parentArg, render: (a) => <S.Labs {...a} />, name: 'Family / Lab tests' };
-export const LabsReading = { render: () => <S.Labs upload="reading" />, name: 'Family / Lab tests – reading upload' };
-export const LabsUploadFailed = { render: () => <S.Labs upload="failed" />, name: 'Family / Lab tests – upload failed' };
+export const LabsReading = { render: () => <S.Labs upload="reading" />, name: 'Family / Lab tests – reading the report' };
+export const LabsReview = { render: () => <S.Labs upload="review" />, name: 'Family / Lab tests – check results before saving' };
+export const LabsSaved = { render: () => <S.Labs upload="saved" />, name: 'Family / Lab tests – results saved' };
+export const LabsUploadFailed = { render: () => <S.Labs upload="unreadable" />, name: 'Family / Lab tests – nothing readable' };
 export const LabsEmpty = { render: () => <S.Labs empty />, name: 'Family / Lab tests – empty' };
 export const Nutrition = { ...parentArg, render: (a) => <S.Nutrition {...a} />, name: 'Family / Nutrition plan' };
 export const Supplements = { ...parentArg, render: (a) => <S.Supplements {...a} />, name: 'Family / Supplements' };

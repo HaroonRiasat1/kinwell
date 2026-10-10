@@ -1,4 +1,5 @@
 import * as svc from '../services/parent.service.js';
+import * as reports from '../services/labs/reports.service.js';
 import { assertCanEdit, loadParentFor } from '../services/access.service.js';
 
 // Every handler below works on one parent the user is allowed to see.
@@ -28,6 +29,8 @@ export const messages = withParent((p, req) => svc.getMessages(p, req.user));
 export const toggleChecklist = withEditableParent((p, req) => svc.setChecklistItem(p, req.params.code, req.body.done));
 export const setReminder = withEditableParent((p, req) => svc.setReminder(p, req.body.slot, req.body.on));
 export const reschedule = withEditableParent((p, req) => svc.requestReschedule(p, req.body));
-export const uploadReport = withEditableParent((p, req) => svc.addLabReport(p, req.user, req.body));
+export const readReport = withEditableParent((p, req) => reports.proposeResults(p, req.body));
+export const saveReport = withEditableParent((p, req) => reports.saveReport(p, req.user, req.body));
+export const reportUnreadable = withEditableParent((p, req) => reports.reportUnreadable(p, req.user, req.body));
 export const postMessage = withParent((p, req) => svc.postMessage(p, req.user, req.body));
 export const signInCode = withParent((p) => svc.createParentSignInCode(p));

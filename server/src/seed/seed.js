@@ -39,7 +39,7 @@ import {
   User,
   Visit,
 } from '../models/index.js';
-import { todayKey, weekDateKeys, weekdayIndex } from '../utils/time.js';
+import { dateKeyDaysAgo, todayKey } from '../utils/time.js';
 
 export const DEMO_PASSWORD = 'kinwell-demo';
 
@@ -181,9 +181,9 @@ async function seedRahmanFamily(hina) {
       }),
     );
     await MealPlan.create({ parent: parent.id, weekOf: '5–11 October', createdBy: hina.id, createdLabel: 'Made by Hina on 28 Sep', days: WEEK[key] });
-    // Checklists for the earlier days of this week, from the design's adherence record
-    // (its "today" was Friday), then today's list in the design's state.
-    const today = weekdayIndex();
+    // Checklists for the last six days from the design's adherence record, counted back from
+    // today so the demo looks the same on any weekday: the design's "today" (Friday, column 4,
+    // with its unticked doses) becomes yesterday, Thursday the day before, and so on.
     const history = (code, d) => {
       const v = SUPPX[key][code]?.week[d];
       if (v !== null && v !== undefined) return v === 1;
@@ -191,11 +191,10 @@ async function seedRahmanFamily(hina) {
     };
     const dishOf = (title) => Object.entries(DISHES).find(([, d]) => d.n === title)?.[0];
     const logItem = (i, done) => ({ code: i.id, dish: i.kind === 'meal' ? dishOf(i.title) : undefined, kind: i.kind, title: i.title, simple: i.simple, dose: i.dose, time: i.time, done });
-    const keys = weekDateKeys();
-    const logs = keys.slice(0, today).map((date, d) => ({
+    const logs = [6, 5, 4, 3, 2, 1].map((n) => ({
       parent: parent.id,
-      date,
-      items: P.items.map((i) => logItem(i, i.kind === 'supp' ? history(i.id, d) : true)),
+      date: dateKeyDaysAgo(n),
+      items: P.items.map((i) => logItem(i, i.kind === 'supp' ? history(i.id, 5 - n) : true)),
     }));
     logs.push({
       parent: parent.id,

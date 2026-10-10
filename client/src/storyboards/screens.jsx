@@ -8,6 +8,7 @@ import { ProfileHeader } from '../features/family/ProfileLayout.jsx';
 import { DashboardView } from '../features/family/DashboardPage.jsx';
 import { OverviewView } from '../features/family/OverviewPage.jsx';
 import { LabsView } from '../features/family/LabsPage.jsx';
+import { ReportUploadView } from '../features/family/ReportUpload.jsx';
 import { NutritionView } from '../features/family/NutritionPage.jsx';
 import { SupplementsView } from '../features/family/SupplementsPage.jsx';
 import { RescheduleDialog, VisitsView } from '../features/family/VisitsPage.jsx';
@@ -80,17 +81,30 @@ export const Overview = ({ parentKey = 'ammi' }) => (
 );
 export function Labs({ parentKey = 'ammi', upload = 'idle', empty = false }) {
   const [sel, setSel] = useState(null);
-  const data = empty ? { markers: [], reports: [] } : fx.labs(parentKey);
+  const [review, setReview] = useState(fx.reportReview);
+  const data = empty ? { markers: [], reports: [], tests: fx.labTests } : fx.labs(parentKey);
+  const panel = (
+    <ReportUploadView
+      state={upload}
+      fileName="Chughtai_Lab_26Sep.jpg"
+      step="reading"
+      progress={0.6}
+      review={review}
+      setReview={setReview}
+      tests={fx.labTests}
+      rawText={'CHUGHTAI LAB\nGlucose Fasting 118 mg/dL 70 - 99\nHbA1c 6.4 % 4.0 - 5.6'}
+      saved={{ results: [{ name: 'Fasting blood sugar', value: '118', unit: 'mg/dL', status: 'watch' }, { name: 'Vitamin D', value: '18', unit: 'ng/mL', status: 'attention' }] }}
+      onPick={noop}
+      onPhoto={noop}
+      onSave={noop}
+      onManual={noop}
+      onSendToTeam={noop}
+      onReset={noop}
+    />
+  );
   return (
     <Family section="labs" parentKey={parentKey} profileArea>
-      <LabsView
-        parent={fx.parentSummary(parentKey)}
-        data={data}
-        selected={sel}
-        onSelect={setSel}
-        onAsk={noop}
-        upload={{ state: upload, fileName: 'Chughtai_Lab_09Oct.pdf', found: 8, error: 'The bottom half of the photo is blurry, so we couldn’t find the cholesterol results.', onPick: noop, onReset: noop }}
-      />
+      <LabsView parent={fx.parentSummary(parentKey)} data={data} selected={sel} onSelect={setSel} onAsk={noop} uploadPanel={panel} />
     </Family>
   );
 }

@@ -288,3 +288,20 @@ export const weekPlan = (key = 'ammi') => ({
   links: {},
   supplements: ['vitd', 'cal'],
 });
+
+// ---------- Lab report upload ----------
+export const labTests = ['HbA1c', 'Fasting blood sugar', 'Vitamin D', 'Vitamin B12', 'Hemoglobin', 'LDL cholesterol', 'HDL cholesterol', 'Total cholesterol', 'Triglycerides', 'Creatinine', 'TSH', 'Ferritin'].map((name) => ({
+  name,
+  unit: { HbA1c: '%', Hemoglobin: 'g/dL', 'Vitamin D': 'ng/mL', 'Vitamin B12': 'pg/mL', TSH: 'mIU/L', Ferritin: 'ng/mL' }[name] ?? 'mg/dL',
+}));
+export const reportReview = {
+  lab: 'Chughtai Lab',
+  date: '26 Sep 2026',
+  rows: [
+    { name: 'Fasting blood sugar', value: '118', include: true, confidence: 'high', line: 'Glucose Fasting 118 mg/dL 70 - 99' },
+    { name: 'HbA1c', value: '6.4', include: true, confidence: 'decimal', raw: '64 %', line: 'HbA1c 64 % 40-56' },
+    { name: 'Vitamin D', value: '18', include: true, confidence: 'high', from: 'nmol/L', raw: '45 nmol/L', line: '25-OH Vitamin D 45 nmol/L' },
+    { name: 'Vitamin B12', value: '410', include: true, confidence: 'check', line: 'Vitamin B12 410' },
+    { name: 'Hemoglobin', value: '', include: true, confidence: 'unclear', raw: '1.6 g/dL', line: 'Hemoglobin (Hb) 1.6 g/dL 12.0-15.5' },
+  ],
+};

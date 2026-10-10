@@ -1,95 +1,20 @@
-import { useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, Chip, EmptyState, Icon, Kicker, Skeleton, StatusTag, TrendChart } from '../../components/ui/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { parentApi } from '../../api/endpoints.js';
 import { useProfile } from './ProfileLayout.jsx';
+import { ReportUpload } from './ReportUpload.jsx';
 
 const FALLBACK_MEANING = { means: 'This is in the healthy range. No change needed.', doing: 'Checking it again at each visit.', you: "Nothing to do. It's going well." };
 
-/** Upload strip: idle → reading → done (or failed). */
-function UploadStrip({ state, fileName, found, error, onPick, onReset }) {
-  return (
-    <>
-      {state === 'failed' && (
-        <Card role="alert" variant="danger" pad={20} className="row row--top" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          <span className="kw-icon-tile kw-icon-tile--attention" style={{ '--size': '48px' }}>
-            <Icon name="alert" size={24} />
-          </span>
-          <div className="grow stack" style={{ '--gap': '4px', minWidth: 240 }}>
-            <div className="strong" style={{ color: '#7d2a22' }}>
-              We couldn't read "{fileName}"
-            </div>
-            <div className="text-sm" style={{ color: 'var(--kw-ink-2)' }}>
-              {error} Nothing was saved, and the results below are unchanged.
-            </div>
-          </div>
-          <div className="row" style={{ '--gap': '10px' }}>
-            <Button icon="camera" onClick={onPick}>
-              Try another file
-            </Button>
-            <Button variant="glass" onClick={onReset}>
-              Dismiss
-            </Button>
-          </div>
-        </Card>
-      )}
-      <Card variant="dashed" pad="18px 20px" className="row" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        <span className="kw-icon-tile">
-          <Icon name="upload" size={24} />
-        </span>
-        <div className="grow" style={{ minWidth: 220 }}>
-          <div className="strong">Add a new lab report</div>
-          <div className="text-sm muted">Drop a PDF or photo. We'll read the numbers and your nutritionist will check them.</div>
-        </div>
-        {(state === 'idle' || state === 'failed') && (
-          <div className="row" style={{ '--gap': '10px' }}>
-            <Button variant="cta" onClick={onPick}>
-              Choose file
-            </Button>
-            <Button variant="glass" icon="camera" onClick={onPick}>
-              Take a photo
-            </Button>
-          </div>
-        )}
-        {state === 'reading' && (
-          <div role="status" aria-live="polite" className="grow stack" style={{ '--gap': '8px', minWidth: 240 }}>
-            <div className="text-sm strong">Reading {fileName}…</div>
-            <div className="kw-meter">
-              <span style={{ width: '65%' }} />
-            </div>
-          </div>
-        )}
-        {state === 'done' && (
-          <div role="status" aria-live="polite" className="row">
-            <span className="row" style={{ '--gap': '8px', color: 'var(--kw-normal)', fontWeight: 700 }}>
-              <Icon name="checkCircle" size={20} />
-              {found} results found
-            </span>
-            <Button onClick={onReset}>Review &amp; save</Button>
-          </div>
-        )}
-      </Card>
-    </>
-  );
-}
-
-export function LabsView({ parent, data, selected, onSelect, upload, onAsk }) {
+/** `uploadPanel` is the report upload flow (or a static version of it in Storybook). */
+export function LabsView({ parent, data, selected, onSelect, uploadPanel, onAsk }) {
   if (!data.markers.length) {
     return (
       <EmptyState
         kicker="No lab reports yet"
         title={`Add ${parent.short}'s first lab report`}
-        action={
-          <div className="row">
-            <Button variant="cta" icon="upload" onClick={upload.onPick}>
-              Choose file
-            </Button>
-            <Button variant="glass" icon="camera" onClick={upload.onPick}>
-              Take a photo
-            </Button>
-          </div>
-        }
+        action={<div className="stack">{uploadPanel}</div>}
       >
         Once there's a report, you'll see each result here with its healthy range, a trend over time and a plain-language explanation.
       </EmptyState>
@@ -99,7 +24,7 @@ export function LabsView({ parent, data, selected, onSelect, upload, onAsk }) {
   const mean = sel.meaning?.means ? sel.meaning : FALLBACK_MEANING;
   return (
     <div className="stack" style={{ '--gap': '20px' }}>
-      <UploadStrip {...upload} />
+      {uploadPanel}
       <div className="split">
         <Card pad={20} gap={14}>
           <div className="row row--between row--top" style={{ '--gap': '10px' }}>
@@ -234,25 +159,6 @@ export default function LabsPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const { data, error, reload } = useApi(() => parentApi.labs(parent.id), [parent.id]);
-  const [up, setUp] = useState({ state: 'idle' });
-  const fileInput = useRef(null);
-
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    if (!/pdf|image/.test(file.type)) {
-      setUp({ state: 'failed', fileName: file.name, error: 'That file type isn’t supported. Use a PDF or a photo.' });
-      return;
-    }
-    setUp({ state: 'reading', fileName: file.name });
-    try {
-      const [res] = await Promise.all([parentApi.uploadReport(parent.id, file.name), new Promise((r) => setTimeout(r, 1200))]);
-      setUp({ state: 'done', fileName: file.name, found: res.resultsFound });
-    } catch (err) {
-      setUp({ state: 'failed', fileName: file.name, error: err.message });
-    }
-  };
 
   if (error) {
     return (
@@ -263,23 +169,13 @@ export default function LabsPage() {
   }
   if (!data) return <LabsSkeleton parent={parent} />;
   return (
-    <>
-      <input ref={fileInput} type="file" accept="application/pdf,image/*" hidden onChange={onFile} />
-      <LabsView
-        parent={parent}
-        data={data}
-        selected={params.get('marker')}
-        onSelect={(name) => setParams({ marker: name }, { replace: true })}
-        onAsk={() => navigate(`/family/${parent.id}/messages`)}
-        upload={{
-          ...up,
-          onPick: () => fileInput.current?.click(),
-          onReset: () => {
-            setUp({ state: 'idle' });
-            reload();
-          },
-        }}
-      />
-    </>
+    <LabsView
+      parent={parent}
+      data={data}
+      selected={params.get('marker')}
+      onSelect={(name) => setParams({ marker: name }, { replace: true })}
+      onAsk={() => navigate(`/family/${parent.id}/messages`)}
+      uploadPanel={<ReportUpload parent={parent} tests={data.tests} onSaved={reload} />}
+    />
   );
 }

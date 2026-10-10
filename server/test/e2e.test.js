@@ -189,6 +189,47 @@ describe('nutritionist (Hina)', () => {
   test('cannot use the admin area', async () => assert.equal((await call('/admin/overview', { token: T.hina })).status, 403));
 });
 
+describe('lab reports (OCR)', () => {
+  const text = 'CHUGHTAI LAB\nReported: 26-Sep-2026\nGlucose Fasting 118 mg/dL 70 - 99\nHbA1c 74 % <57\nVitamin D (25-OH) 18.2 ng/mL 30 - 100\nHemoglobin (Hb) 1.6 g/dL 12.0-15.5';
+  test('reading proposes results without saving anything', async () => {
+    const before = await ok(`/parents/${ammi}/labs`, { token: T.sana });
+    const r = await ok(`/parents/${ammi}/labs/read`, { method: 'POST', token: T.sana, body: { text } });
+    const x = Object.fromEntries(r.results.map((y) => [y.name, y]));
+    assert.equal(r.lab, 'Chughtai Lab');
+    assert.equal(r.date, '26 Sep 2026');
+    assert.equal(x['Fasting blood sugar'].value, '118');
+    assert.equal(x.HbA1c.value, '7.4');
+    assert.equal(x.HbA1c.confidence, 'decimal');
+    assert.equal(x['Vitamin D'].status, 'attention');
+    assert.equal(x.Hemoglobin.confidence, 'unclear');
+    const after = await ok(`/parents/${ammi}/labs`, { token: T.sana });
+    assert.equal(after.reports.length, before.reports.length);
+  });
+  test('saving re-grades on the server and reaches the nutritionist and admins', async () => {
+    const saved = await ok(`/parents/${ammi}/labs/reports`, { method: 'POST', token: T.sana, body: { fileName: 'oct.pdf', lab: 'Chughtai Lab', date: '26 Sep 2026', source: 'pdf', results: [{ name: 'HbA1c', value: '7.4' }, { name: 'Hemoglobin', value: '11.6' }] } });
+    assert.deepEqual(saved.results.map((r) => r.status), ['attention', 'watch']);
+    const labs = await ok(`/parents/${ammi}/labs`, { token: T.sana });
+    assert.equal(labs.reports[0].file, 'oct.pdf');
+    assert.equal(labs.markers.find((m) => m.name === 'HbA1c').value, '7.4');
+    const n = await ok('/workspace/notifications', { token: T.hina });
+    assert.match(n[0].title, /New lab results for Fatima Rahman/);
+    const o = await ok('/admin/flags', { token: T.zara });
+    const flags = Array.isArray(o) ? o : Object.values(o).find(Array.isArray);
+    assert.ok(flags.some((f) => f.type === 'Critical result' && f.title.includes('HbA1c 7.4')));
+  });
+  test('impossible and unknown results are refused', async () => {
+    assert.equal((await call(`/parents/${ammi}/labs/reports`, { method: 'POST', token: T.sana, body: { fileName: 'x.pdf', results: [{ name: 'HbA1c', value: '74' }] } })).status, 400);
+    assert.equal((await call(`/parents/${ammi}/labs/reports`, { method: 'POST', token: T.sana, body: { fileName: 'x.pdf', results: [{ name: 'Magic', value: '1' }] } })).status, 400);
+    assert.equal((await call(`/parents/${ammi}/labs/read`, { method: 'POST', body: { text } })).status, 401);
+  });
+  test('an unreadable report goes to the admin queue', async () => {
+    const before = await ok('/admin/lab-uploads', { token: T.zara });
+    await ok(`/parents/${ammi}/labs/unreadable`, { method: 'POST', token: T.sana, body: { fileName: 'IMG_dark.jpg', reason: "Couldn't find any results" } });
+    const after = await ok('/admin/lab-uploads', { token: T.zara });
+    assert.equal(after.open.length, before.open.length + 1);
+  });
+});
+
 describe('admin (Zara)', () => {
   test('overview numbers are consistent', async () => {
     const o = await ok('/admin/overview', { token: T.zara });
