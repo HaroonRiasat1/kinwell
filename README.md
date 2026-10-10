@@ -144,7 +144,17 @@ All routes are under `/api`. Everything except sign-in, onboarding and `/health`
 | Invites | `GET /auth/invites/:token`, `POST /auth/invites/accept` (the `/join/:token` page) |
 | Onboarding | `GET /onboarding/nutritionists`, `POST /onboarding` |
 
-`server/test/smoke.sh` exercises the main routes against a running, seeded API.
+## Tests
+
+With the API running (`npm run dev -w server`):
+
+```bash
+npm test
+```
+
+This reseeds the local database and runs 33 end-to-end tests over HTTP: every role's main flows and the
+permission boundaries between them (`server/test/e2e.test.js`). `npm run test:smoke -w server` is a
+quicker manual check that prints raw responses.
 
 ## Visit readings
 

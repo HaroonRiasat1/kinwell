@@ -8,7 +8,9 @@
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "seed": "node --env-file-if-exists=.env src/seed/seed.js",
-    "test": "bash test/smoke.sh"
+    "test": "npm run test:e2e",
+    "test:e2e": "node --env-file-if-exists=.env --test --test-concurrency=1 test/e2e.test.js",
+    "test:smoke": "bash test/smoke.sh"
   },
   "dependencies": {
     "@kinwell/shared": "1.0.0",

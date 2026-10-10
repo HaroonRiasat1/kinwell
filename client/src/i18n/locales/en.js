@@ -2,6 +2,10 @@
 export default {
   'language.choose': 'Language',
 
+  'login.headline': 'Know how Mom and Dad are doing, at a glance.',
+  'login.intro': 'A nutritionist visits your parents at home. You get clear, plain-language updates wherever you live.',
+  'login.illustration': 'Illustration: parents at home, nutritionist visiting',
+
   'common.signIn': 'Sign in',
   'common.signOut': 'Sign out',
   'common.pleaseWait': 'Please wait…',

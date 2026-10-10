@@ -196,17 +196,16 @@ function ForgotForm({ onBack }) {
 }
 
 export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, busy, error, parentPhone = '' }) {
+  const { t } = useI18n();
   return (
     <div className="kw-backdrop" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 32, padding: 'clamp(20px, 4vw, 48px)', alignItems: 'center' }}>
       <div className="stack" style={{ '--gap': '24px', maxWidth: 560 }}>
         <BrandMark to="/" />
-        <h1 style={{ fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 800, lineHeight: 1.08 }}>Know how Mom and Dad are doing, at a glance.</h1>
-        <p style={{ fontSize: 20, color: 'var(--kw-ink-2)' }}>
-          A nutritionist visits your parents at home. You get clear, plain-language updates wherever you live.
-        </p>
+        <h1 style={{ fontSize: 'clamp(36px, 5vw, 52px)', fontWeight: 800, lineHeight: 1.08 }}>{t('login.headline')}</h1>
+        <p style={{ fontSize: 20, color: 'var(--kw-ink-2)' }}>{t('login.intro')}</p>
         <div className="kw-card hide-mobile" style={{ height: 240, alignItems: 'center', justifyContent: 'center', borderStyle: 'dashed' }}>
           <Icon name="image" size={28} />
-          <span className="muted text-sm">Illustration: parents at home, nutritionist visiting</span>
+          <span className="muted text-sm">{t('login.illustration')}</span>
         </div>
       </div>
       <Card pad="clamp(24px, 3vw, 36px)" style={{ maxWidth: 520, width: '100%', justifySelf: 'center' }}>

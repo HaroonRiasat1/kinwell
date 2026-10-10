@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Quick end-to-end check of the API against a seeded database. Usage: bash test/smoke.sh
+# Quick manual check of the API. Expects a freshly seeded database (npm run seed);
+# results depend on the data, so prefer `npm test` (the self-seeding e2e suite).
+# Usage: bash test/smoke.sh   or   API=https://…/api bash test/smoke.sh
 B=${API:-http://localhost:4000/api}
 j(){ python3 -c "import sys,json;d=json.load(sys.stdin);print($1)"; }
 post(){ curl -s -XPOST "$B$1" -H 'content-type: application/json' ${3:+-H "$3"} -d "$2"; }
