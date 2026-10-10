@@ -30,3 +30,4 @@ export const setReminder = withEditableParent((p, req) => svc.setReminder(p, req
 export const reschedule = withEditableParent((p, req) => svc.requestReschedule(p, req.body));
 export const uploadReport = withEditableParent((p, req) => svc.addLabReport(p, req.user, req.body));
 export const postMessage = withParent((p, req) => svc.postMessage(p, req.user, req.body));
+export const signInCode = withParent((p) => svc.createParentSignInCode(p));

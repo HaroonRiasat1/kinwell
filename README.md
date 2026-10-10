@@ -44,8 +44,19 @@ All use the password `kinwell-demo`.
 - Family: `sana.rahman@gmail.com`, `bilal.rahman@gmail.com`
 - Nutritionist: `hina.qureshi@kinwell.pk` (also amna.sheikh, usman.tariq, sadia.malik, faraz.ahmed)
 - Admin: `zara.ahmed@kinwell.pk`
-- Parent: choose “Signing in for Ammi or Abbu?” and enter `+923001112233` (Ammi) or `+923001112244` (Abbu).
-  No SMS provider is connected; in development the API returns the code and the screen shows it.
+- Parent: choose “I'm a parent: sign in with my phone number” and enter `0300 1112233` (Ammi) or
+  `0300 1112244` (Abbu). Any format works (`+92 300…`, `0300-…`).
+
+### How parents get their sign-in code
+
+Until a text-message provider is connected, a family member makes the code: on the parent's
+**Profile → Help with sign in** (or **Help Ammi sign in** in the sidebar), tap **Make a code**, then
+**Send on WhatsApp**. The message has a link that opens the code screen with the number filled in.
+Codes work once, for 30 minutes, and lock after 5 wrong tries. Parents then stay signed in for 90 days.
+In development the code is also shown on screen.
+
+To send codes by SMS instead, set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_FROM` in the
+server environment (Vercel → Settings → Environment Variables) and redeploy. Nothing else changes.
 
 ## Storybook: core UI and storyboards
 
@@ -111,7 +122,7 @@ All routes are under `/api`. Everything except sign-in, onboarding and `/health`
 
 ## Not built yet
 
-- SMS sending for parent codes, password-reset emails.
+- Password-reset emails. (SMS for parent codes works once Twilio keys are set; see above.)
 - Reading numbers from uploaded lab PDFs/photos: uploads are recorded, but the values aren't parsed.
 - File storage for documents and visit photos.
 - Google/Apple sign-in buttons from the design were left out until they can actually work.

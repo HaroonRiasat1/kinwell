@@ -4,8 +4,11 @@ import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
+// Parents stay signed in for 90 days so they rarely need a new code.
 export const signToken = (user) =>
-  jwt.sign({ sub: user.id, role: user.role, tv: user.tokenVersion }, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+  jwt.sign({ sub: user.id, role: user.role, tv: user.tokenVersion }, env.jwtSecret, {
+    expiresIn: user.role === 'parent' ? '90d' : env.jwtExpiresIn,
+  });
 
 export const requireAuth = asyncHandler(async (req, _res, next) => {
   const header = req.headers.authorization ?? '';

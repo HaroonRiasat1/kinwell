@@ -14,7 +14,19 @@ import {
   Visit,
 } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
-import { todayKey, weekdayIndex } from '../utils/time.js';
+import { env } from '../config/env.js';
+import {
+  calendarDaysUntil,
+  dateKeyDaysAgo,
+  longVisitLabel,
+  relativeDays,
+  shortDayLabel,
+  shortVisitLabel,
+  todayKey,
+  weekDateKeys,
+  weekdayIndex,
+} from '../utils/time.js';
+import { issueParentCode } from './auth.service.js';
 
 const MEAL_SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 const MEAL_TIMES = ['8:00 am', '1:30 pm', '8:00 pm', '5:00 pm'];
@@ -45,6 +57,81 @@ const markerSummary = (m) => ({
 });
 
 const markersFor = (parentId) => LabMarker.find({ parent: parentId }).sort('order');
+
+const UPCOMING = { $in: ['scheduled', 'reschedule_requested'] };
+
+/** Last/next visit labels worked out from real visit records (stored text is only a fallback). */
+export async function visitSummary(parent) {
+  const [last, next] = await Promise.all([
+    Visit.findOne({ parent: parent.id, status: 'completed' }).sort('-scheduledFor'),
+    Visit.findOne({ parent: parent.id, status: UPCOMING, scheduledFor: { $gte: new Date(Date.now() - 12 * 3600 * 1000) } }).sort('scheduledFor'),
+  ]);
+  return {
+    lastVisit: last?.scheduledFor ? shortDayLabel(last.scheduledFor) : parent.lastVisit,
+    nextVisit: next?.scheduledFor ? shortVisitLabel(next.scheduledFor) : next ? parent.nextVisit : null,
+    nextIn: next?.scheduledFor ? relativeDays(calendarDaysUntil(next.scheduledFor)) : null,
+    nextVisitLong: next?.scheduledFor ? longVisitLabel(next.scheduledFor) : next ? parent.nextVisitLong : null,
+    upcoming: next,
+  };
+}
+
+const startedOn = (supp) => {
+  const t = Date.parse(supp.start ?? '');
+  return Number.isNaN(t) ? null : todayKey(new Date(t));
+};
+
+/**
+ * This week's record for each supplement, taken from the daily checklists:
+ * 1 taken, 0 missed (a past day not ticked), null still to come or not started.
+ */
+async function weekAdherence(parent, supps) {
+  const keys = weekDateKeys();
+  const today = weekdayIndex();
+  const logs = await DailyLog.find({ parent: parent.id, date: { $in: keys } });
+  const byDate = Object.fromEntries(logs.map((l) => [l.date, l]));
+  return Object.fromEntries(
+    supps.map((s) => {
+      const start = startedOn(s);
+      const week = keys.map((k, i) => {
+        if (i > today || (start && k < start)) return null;
+        const done = byDate[k]?.items.find((it) => it.code === s.code)?.done;
+        if (i === today) return done ? 1 : null;
+        return done ? 1 : 0;
+      });
+      return [s.code, week];
+    }),
+  );
+}
+
+/** Alerts for tablets that weren't ticked off on the last two days. */
+async function missedDoseAlerts(parent) {
+  const [supps, logs] = await Promise.all([
+    Supplement.find({ parent: parent.id, active: true }).sort('code'),
+    DailyLog.find({ parent: parent.id, date: { $in: [dateKeyDaysAgo(1), dateKeyDaysAgo(2)] } }),
+  ]);
+  const byDate = Object.fromEntries(logs.map((l) => [l.date, l]));
+  return supps.flatMap((s) => {
+    const start = startedOn(s);
+    const missed = [1, 2].filter((n) => {
+      const key = dateKeyDaysAgo(n);
+      if (start && key < start) return false;
+      return !byDate[key]?.items.find((it) => it.code === s.code)?.done;
+    });
+    if (!missed.includes(1)) return [];
+    const name = s.title.split(' · ')[0];
+    const two = missed.length === 2;
+    return [
+      {
+        id: `missed-${s.code}`,
+        status: two ? 'attention' : 'watch',
+        type: 'Missed',
+        title: two ? `${name} missed 2 days` : `${name} missed yesterday`,
+        text: `${parent.short} didn't tick off the ${s.slot.toLowerCase()} ${name} ${two ? 'yesterday or the day before' : 'yesterday'}.`,
+        action: `Send ${parent.short} a reminder`,
+      },
+    ];
+  });
+}
 
 async function nutritionistCard(userId) {
   if (!userId) return null;
@@ -87,23 +174,27 @@ export async function getOrCreateTodayLog(parent) {
 }
 
 export async function getDashboard(parent) {
-  const [log, markers, nutritionist] = await Promise.all([
+  const [log, markers, nutritionist, visits, missed] = await Promise.all([
     getOrCreateTodayLog(parent),
     markersFor(parent.id),
     nutritionistCard(parent.nutritionist),
+    visitSummary(parent),
+    missedDoseAlerts(parent),
   ]);
+  const stored = parent.alerts.filter((a) => !a.resolved && a.type !== 'Missed').map((a) => ({ id: a.id, ...a.toObject(), _id: undefined }));
+  const rank = { attention: 0, watch: 1, normal: 2 };
   return {
     parent: {
       ...summary(parent),
       overallTitle: parent.overallTitle,
       overallText: parent.overallText,
-      lastVisit: parent.lastVisit,
-      nextVisit: parent.nextVisit,
-      nextIn: parent.nextIn,
-      nextVisitLong: parent.nextVisitLong,
+      lastVisit: visits.lastVisit,
+      nextVisit: visits.nextVisit,
+      nextIn: visits.nextIn,
+      nextVisitLong: visits.nextVisitLong,
       note: parent.note,
       changes: parent.changes,
-      alerts: parent.alerts.filter((a) => !a.resolved).map((a) => ({ id: a.id, ...a.toObject(), _id: undefined })),
+      alerts: [...stored, ...missed].sort((a, b) => rank[a.status] - rank[b.status]),
     },
     nutritionist,
     checklist: log.items,
@@ -118,22 +209,14 @@ export async function setChecklistItem(parent, code, done) {
   item.done = done;
   item.doneAt = done ? new Date() : undefined;
   await log.save();
-
-  // Keep the supplement's weekly adherence record in step with the checklist.
-  if (item.kind === 'supp') {
-    const supp = await Supplement.findOne({ parent: parent.id, code });
-    if (supp) {
-      supp.week.set(weekdayIndex(), done ? 1 : null);
-      await supp.save();
-    }
-  }
   return log.items;
 }
 
 export async function getProfile(parent) {
-  const [family, nutritionist] = await Promise.all([
+  const [family, nutritionist, visits] = await Promise.all([
     Family.findById(parent.family),
     nutritionistCard(parent.nutritionist),
+    visitSummary(parent),
   ]);
   return {
     parent: {
@@ -145,7 +228,7 @@ export async function getProfile(parent) {
       allergies: parent.allergies,
       medicines: parent.medicines,
       diet: parent.diet,
-      nextVisitLong: parent.nextVisitLong,
+      nextVisitLong: visits.nextVisitLong,
     },
     contacts: family?.contacts ?? [],
     nutritionist,
@@ -212,6 +295,7 @@ export async function getSupplements(parent) {
     markersFor(parent.id),
     getOrCreateTodayLog(parent),
   ]);
+  const weeks = await weekAdherence(parent, supps);
   const doneToday = Object.fromEntries(log.items.map((i) => [i.code, i.done]));
   return {
     supplements: supps.map((s) => ({
@@ -227,7 +311,7 @@ export async function getSupplements(parent) {
       link: s.link,
       start: s.start,
       review: s.review,
-      week: s.week,
+      week: weeks[s.code],
       reminderOn: s.reminderOn,
       doneToday: !!doneToday[s.code],
     })),
@@ -242,12 +326,13 @@ export async function setReminder(parent, slot, on) {
   return { slot, on };
 }
 
+// Upcoming visits show date/time from the real appointment, in Lahore time.
 const visitView = (v) => ({
   id: v.id,
   status: v.status,
-  date: v.date,
+  date: v.status !== 'completed' && v.scheduledFor ? longVisitLabel(v.scheduledFor).split(' at ')[0] : v.date,
   short: v.short,
-  time: v.time,
+  time: v.status !== 'completed' && v.scheduledFor ? longVisitLabel(v.scheduledFor).split(' at ')[1] : v.time,
   title: v.title,
   summary: v.summary,
   dur: v.dur,
@@ -262,7 +347,7 @@ const visitView = (v) => ({
 
 export async function getVisits(parent) {
   const [upcoming, past] = await Promise.all([
-    Visit.findOne({ parent: parent.id, status: { $in: ['scheduled', 'reschedule_requested'] } }).sort('scheduledFor'),
+    Visit.findOne({ parent: parent.id, status: UPCOMING, scheduledFor: { $gte: new Date(Date.now() - 12 * 3600 * 1000) } }).sort('scheduledFor'),
     Visit.find({ parent: parent.id, status: 'completed' }).sort('-scheduledFor'),
   ]);
   // Open slots come from the nutritionist's calendar; until calendar sync exists they are a fixed set.
@@ -335,13 +420,38 @@ export async function postMessage(parent, user, { text }) {
 }
 
 export async function getParentHome(parent) {
-  const [dash, family, upcoming] = await Promise.all([
+  const [dash, family, visits, nutritionist] = await Promise.all([
     getDashboard(parent),
     Family.findById(parent.family).populate('members.user'),
-    Visit.findOne({ parent: parent.id, status: { $in: ['scheduled', 'reschedule_requested'] } }).sort('scheduledFor'),
+    visitSummary(parent),
+    User.findById(parent.nutritionist),
   ]);
   const children = family.members
     .filter((m) => m.user && m.status === 'active')
-    .map((m) => ({ id: m.user.id, name: m.user.name.split(' ')[0], city: m.user.city, relation: m.relation }));
-  return { ...dash, children, nextVisit: upcoming && { date: parent.nextVisitLong, plan: upcoming.plan } };
+    .map((m) => ({ id: m.user.id, name: m.user.name.split(' ')[0], city: m.user.city, relation: m.relation, phone: m.user.phone ?? null }));
+  return {
+    ...dash,
+    children,
+    nextVisit: visits.upcoming && { date: visits.nextVisitLong, nextIn: visits.nextIn, plan: visits.upcoming.plan },
+    // The latest plain-language note from the nutritionist, so the parent can read it too.
+    latestNote: parent.note && { text: parent.note, from: nutritionist?.name ?? 'Your nutritionist', after: visits.lastVisit },
+  };
+}
+
+/**
+ * A family member creates a sign-in code for their parent and passes it on
+ * (phone call, WhatsApp). This is how parents sign in until SMS is connected.
+ */
+export async function createParentSignInCode(parent) {
+  const parentUser = await User.findOne({ role: 'parent', parent: parent.id });
+  if (!parentUser?.phone) throw ApiError.badRequest(`${parent.short} doesn't have a phone number on Kinwell yet.`);
+  const { code, expiresAt } = await issueParentCode(parentUser);
+  const link = `${env.publicUrl}/login?as=parent&phone=${encodeURIComponent(parentUser.phone)}`;
+  return {
+    code,
+    expiresAt,
+    phone: parentUser.phone,
+    link,
+    shareText: `Assalam-o-Alaikum ${parent.short}! Your Kinwell code is ${code}. Open ${link} and type the code. It works for 30 minutes.`,
+  };
 }

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Button, Card, ErrorState, Icon, Kicker, SkeletonCard } from '../../components/ui/index.js';
 import { useProfile } from './ProfileLayout.jsx';
+import { ParentSignInCard } from './ParentSignInHelp.jsx';
 
 function Section({ title, onEdit, children, gap = 14 }) {
   return (
@@ -20,11 +21,12 @@ function Section({ title, onEdit, children, gap = 14 }) {
 
 const itemRule = { paddingTop: 12, borderTop: '1px solid var(--kw-rule-soft)' };
 
-export function OverviewView({ data, onMessage }) {
+export function OverviewView({ data, onMessage, signInHelp = true }) {
   const { parent: p, contacts, nutritionist } = data;
   const noop = () => {};
   return (
     <div className="grid-auto" style={{ '--min': '320px' }}>
+      {signInHelp && <ParentSignInCard parent={p} />}
       <Section title="Health conditions" onEdit={noop}>
         {p.conditions.length === 0 && <p className="muted">None recorded yet.</p>}
         {p.conditions.map((c) => (

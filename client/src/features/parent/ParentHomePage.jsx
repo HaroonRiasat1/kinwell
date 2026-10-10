@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BrandMark } from '../../components/layout/index.js';
-import { Avatar, Button, ErrorState, Icon, Modal, Skeleton } from '../../components/ui/index.js';
+import { BrandMark, SignOutDialog } from '../../components/layout/index.js';
+import { Avatar, Button, ErrorState, Icon, Skeleton } from '../../components/ui/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { parentApi } from '../../api/endpoints.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
@@ -27,8 +27,8 @@ function Task({ title, sub, detail, done, doneLabel, onToggle }) {
  * The parent's own screen: one column, 24px text, a big button per task.
  * `familyPreview` shows it to a family member with a way back.
  */
-export function ParentHomeView({ data, onToggle, onCall, familyPreview, onBack }) {
-  const { parent, checklist, children, nextVisit, nutritionist } = data;
+export function ParentHomeView({ data, onToggle, familyPreview, onBack, onSignOut }) {
+  const { parent, checklist, children, nextVisit, nutritionist, latestNote } = data;
   const done = checklist.filter((i) => i.done).length;
   const supps = checklist.filter((i) => i.kind === 'supp');
   const meals = checklist.filter((i) => i.kind === 'meal');
@@ -37,9 +37,13 @@ export function ParentHomeView({ data, onToggle, onCall, familyPreview, onBack }
       <div className="kw-parent-view">
         <div className="row row--between">
           <BrandMark to="." />
-          {familyPreview && (
+          {familyPreview ? (
             <Button variant="glass" onClick={onBack}>
               Family view
+            </Button>
+          ) : (
+            <Button variant="glass" icon="signOut" onClick={onSignOut}>
+              Sign out
             </Button>
           )}
         </div>
@@ -68,25 +72,46 @@ export function ParentHomeView({ data, onToggle, onCall, familyPreview, onBack }
           ))}
         </section>
 
+        {latestNote && (
+          <section aria-labelledby="pv-note" className="kw-parent-card">
+            <h2 id="pv-note">A note from {latestNote.from.split(' ')[0]}</h2>
+            <p style={{ lineHeight: 1.5 }}>“{latestNote.text}”</p>
+            <div className="muted" style={{ fontSize: 20 }}>
+              After the visit on {latestNote.after}
+            </div>
+          </section>
+        )}
+
         {nextVisit && (
-          <section aria-labelledby="pv-visit" className="kw-parent-task" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+          <section aria-labelledby="pv-visit" className="kw-parent-card">
             <h2 id="pv-visit">Your next visit</h2>
-            <div className="row">
+            <div className="row" style={{ flexWrap: 'nowrap' }}>
               <Avatar name={nutritionist?.name} size={64} tone="sage" />
               <div>
-                <div style={{ fontWeight: 800 }}>{nextVisit.date}</div>
+                <div style={{ fontWeight: 800 }}>{nextVisit.nextIn}</div>
+                <div>{nextVisit.date}</div>
                 <div className="muted">{nutritionist?.name} will come to your home.</div>
               </div>
             </div>
           </section>
         )}
 
-        <section className="stack" aria-label="Call your children">
-          {children.map((c) => (
-            <Button key={c.id} size="lg" icon="phone" block style={{ minHeight: 72, fontSize: 24 }} onClick={() => onCall(c)}>
-              Call {c.name} in {c.city}
-            </Button>
-          ))}
+        <section className="stack" aria-labelledby="pv-call">
+          <h2 id="pv-call">Call your family</h2>
+          {children.map((c) =>
+            c.phone ? (
+              <a key={c.id} className="kw-btn kw-btn--primary kw-btn--block kw-parent-call" href={`tel:${c.phone}`}>
+                <Icon name="phone" size={26} />
+                <span>
+                  Call {c.name} <span className="kw-parent-call__sub">{c.city}</span>
+                </span>
+              </a>
+            ) : (
+              <div key={c.id} className="muted" style={{ fontSize: 20 }}>
+                {c.name} hasn't added a phone number yet.
+              </div>
+            ),
+          )}
         </section>
       </div>
     </div>
@@ -98,7 +123,7 @@ export default function ParentHomePage({ familyPreview = false }) {
   const auth = useOptionalAuth();
   const navigate = useNavigate();
   const parentId = params.parentId ?? auth?.user?.parent;
-  const [calling, setCalling] = useState(null);
+  const [signingOut, setSigningOut] = useState(false);
   const { data, error, reload, setData } = useApi(() => parentApi.home(parentId), [parentId]);
 
   const toggle = async (item) => {
@@ -134,22 +159,19 @@ export default function ParentHomePage({ familyPreview = false }) {
       <ParentHomeView
         data={data}
         onToggle={toggle}
-        onCall={setCalling}
         familyPreview={familyPreview}
         onBack={() => navigate(`/family/${parentId}/dashboard`)}
+        onSignOut={() => setSigningOut(true)}
       />
-      <Modal open={!!calling} onClose={() => setCalling(null)} labelledBy="call-h" width={420}>
-        <div className="stack" style={{ alignItems: 'center', textAlign: 'center', fontSize: 22 }}>
-          <Avatar name={calling?.name} size={96} tone="deep" />
-          <h2 id="call-h" style={{ fontSize: 30, fontWeight: 800 }}>
-            Calling {calling?.name}…
-          </h2>
-          <div className="muted">{calling?.city}</div>
-          <Button variant="danger" size="lg" icon="phone" onClick={() => setCalling(null)}>
-            End call
-          </Button>
-        </div>
-      </Modal>
+      <SignOutDialog
+        message="To sign back in, you'll need a new code from your family."
+        open={signingOut}
+        onCancel={() => setSigningOut(false)}
+        onConfirm={async (everywhere) => {
+          await auth?.signOut(everywhere);
+          navigate('/signed-out?as=parent', { replace: true });
+        }}
+      />
     </>
   );
 }

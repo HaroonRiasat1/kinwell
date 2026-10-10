@@ -656,3 +656,33 @@ button.kw-table__row {
   border-radius: var(--kw-r-pill);
   background: var(--kw-teal-700);
 }
+
+/* ===== One-time code: one real input, six drawn boxes ===== */
+.kw-codeinput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  font-size: 16px; /* stops iOS zooming in */
+  cursor: text;
+  z-index: 1;
+}
+.kw-codeboxes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.kw-codebox {
+  height: 64px;
+  border-radius: var(--kw-r-md);
+  border: 1px solid var(--kw-glass-border-strong);
+  background: rgba(255, 255, 255, 0.75);
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+}
+.kw-codebox.is-active {
+  outline: 3px solid var(--kw-teal-700);
+}

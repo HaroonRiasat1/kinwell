@@ -45,7 +45,8 @@ export const ParentDay = {
       persona="Fatima Rahman (Ammi), 72, Lahore. Uses a tablet; prefers large text."
       goal="Tick off vitamins and meals, and call her children with one tap."
       frames={[
-        { title: 'Sign in with a text code', caption: 'No password: a 6-digit code arrives by SMS.', screen: <S.Login mode="code" /> },
+        { title: 'Sana makes a sign-in code', caption: 'Until SMS is connected, the family creates the code and sends it on WhatsApp.', screen: <S.ParentSignInHelp /> },
+        { title: 'Ammi types the code', caption: 'One field, six big boxes; works with paste and phone autofill.', screen: <S.Login mode="code" /> },
         { title: 'One column, big buttons', caption: '24px text, 64px buttons, one task per card. Sana sees the ticks instantly.', screen: <S.ParentHome />, height: 420 },
       ]}
     />

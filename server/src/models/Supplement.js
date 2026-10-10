@@ -14,7 +14,6 @@ const supplementSchema = new mongoose.Schema(
     link: String, // lab marker this supplement addresses
     start: String,
     review: String,
-    week: [{ type: Number, default: null }], // Mon..Sun: 1 taken, 0 missed, null not yet
     reminderOn: { type: Boolean, default: true },
     active: { type: Boolean, default: true },
   },

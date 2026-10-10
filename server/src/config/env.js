@@ -11,4 +11,6 @@ export const env = {
   jwtSecret: required('JWT_SECRET', 'dev-only-secret'),
   jwtExpiresIn: required('JWT_EXPIRES_IN', '7d'),
   clientOrigin: required('CLIENT_ORIGIN', 'http://localhost:5173'),
+  publicUrl: process.env.PUBLIC_URL ?? 'https://kinwell-sepia.vercel.app',
+  twilio: { sid: process.env.TWILIO_ACCOUNT_SID, token: process.env.TWILIO_AUTH_TOKEN, from: process.env.TWILIO_FROM },
 };

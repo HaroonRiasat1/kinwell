@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { normalizePhone } from '../utils/phone.js';
 
 const nutritionistProfileSchema = new mongoose.Schema(
   {
@@ -18,7 +19,7 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, lowercase: true, trim: true, unique: true, sparse: true },
-    phone: { type: String, trim: true },
+    phone: { type: String, trim: true, set: (v) => (v ? normalizePhone(v) : v) },
     passwordHash: { type: String, select: false },
     role: { type: String, enum: ['family', 'nutritionist', 'admin', 'parent'], required: true },
     city: String,
@@ -27,7 +28,7 @@ const userSchema = new mongoose.Schema(
     parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' }, // set for role=parent
     nutritionist: nutritionistProfileSchema,
     // Parent sign-in uses a one-time 6-digit SMS code instead of a password.
-    loginCode: { hash: { type: String, select: false }, expiresAt: Date },
+    loginCode: { hash: { type: String, select: false }, expiresAt: Date, attempts: { type: Number, default: 0 } },
     tokenVersion: { type: Number, default: 0 }, // bump to sign out everywhere
   },
   { timestamps: true },

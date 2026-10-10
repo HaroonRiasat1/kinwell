@@ -12,6 +12,7 @@ import { NutritionView } from '../features/family/NutritionPage.jsx';
 import { SupplementsView } from '../features/family/SupplementsPage.jsx';
 import { RescheduleDialog, VisitsView } from '../features/family/VisitsPage.jsx';
 import { DocumentsView } from '../features/family/DocumentsPage.jsx';
+import { ParentSignInDialog } from '../features/family/ParentSignInHelp.jsx';
 import { MessagesView } from '../features/family/MessagesPage.jsx';
 import { ParentHomeView } from '../features/parent/ParentHomePage.jsx';
 import { WorkspaceShell } from '../features/workspace/WorkspaceLayout.jsx';
@@ -45,6 +46,18 @@ export function Login({ mode = 'signin', role = 'family', error = null, busy = f
   return <LoginView mode={m} setMode={setM} role={r} setRole={setR} onSubmit={noop} onSession={noop} busy={busy} error={error} />;
 }
 export const SignedOut = () => <SignedOutPage />;
+export function ParentSignInHelp() {
+  return (
+    <Family section="profile" profileArea>
+      <ParentSignInDialog
+        open
+        parent={fx.parentSummary('ammi')}
+        onClose={noop}
+        createCode={async () => ({ code: '482913', expiresAt: new Date(Date.now() + 30 * 60000).toISOString(), phone: '+923001112233', shareText: 'Assalam-o-Alaikum Ammi! Your Kinwell code is 482913.' })}
+      />
+    </Family>
+  );
+}
 
 // ---------- Family ----------
 export function Dashboard({ status = 'ready', parentKey = 'ammi' }) {
@@ -125,7 +138,7 @@ export function Messages({ parentKey = 'ammi' }) {
 export function ParentHome({ parentKey = 'ammi', familyPreview = false }) {
   const [data, setData] = useState(() => fx.home(parentKey));
   const toggle = (it) => setData((d) => ({ ...d, checklist: d.checklist.map((i) => (i.code === it.code ? { ...i, done: !i.done } : i)) }));
-  return <ParentHomeView data={data} onToggle={toggle} onCall={noop} familyPreview={familyPreview} onBack={noop} />;
+  return <ParentHomeView data={data} onToggle={toggle} familyPreview={familyPreview} onBack={noop} onSignOut={noop} />;
 }
 
 // ---------- Nutritionist ----------

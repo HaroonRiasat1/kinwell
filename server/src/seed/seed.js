@@ -37,11 +37,18 @@ import {
   User,
   Visit,
 } from '../models/index.js';
-import { startOfWeek, todayKey, weekdayIndex } from '../utils/time.js';
+import { startOfWeek, todayKey, weekDateKeys, weekdayIndex } from '../utils/time.js';
 
 export const DEMO_PASSWORD = 'kinwell-demo';
 
 const daysFromNow = (n) => new Date(Date.now() + n * 24 * 3600 * 1000);
+
+// "2026-10-12", "11:00 am" → that moment in Lahore (UTC+5, no daylight saving).
+function lahoreTime(dateKey, clock) {
+  const [, h, m = '00', ap] = clock.match(/(\d+):?(\d+)?\s*(am|pm)/i);
+  const hour = (Number(h) % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0);
+  return new Date(`${dateKey}T${String(hour).padStart(2, '0')}:${m}:00+05:00`);
+}
 
 async function makeUser(fields) {
   const user = new User(fields);
@@ -80,8 +87,8 @@ async function seedPeople() {
 }
 
 async function seedRahmanFamily(hina) {
-  const sana = await makeUser({ name: 'Sana Rahman', email: 'sana.rahman@gmail.com', role: 'family', city: 'London', timezone: 'Europe/London' });
-  const bilal = await makeUser({ name: 'Bilal Rahman', email: 'bilal.rahman@gmail.com', role: 'family', city: 'Dubai', timezone: 'Asia/Dubai' });
+  const sana = await makeUser({ name: 'Sana Rahman', email: 'sana.rahman@gmail.com', phone: '+44 7700 900412', role: 'family', city: 'London', timezone: 'Europe/London' });
+  const bilal = await makeUser({ name: 'Bilal Rahman', email: 'bilal.rahman@gmail.com', phone: '+971 50 123 4567', role: 'family', city: 'Dubai', timezone: 'Asia/Dubai' });
 
   const family = await Family.create({
     name: 'Rahman family',
@@ -127,7 +134,8 @@ async function seedRahmanFamily(hina) {
       nextVisit: P.nextVisit,
       nextIn: P.nextIn,
       nextVisitLong: P.nextVisitLong,
-      alerts: P.alerts,
+      // Missed-dose alerts are worked out from the daily checklists, so only the others are stored.
+      alerts: P.alerts.filter((a) => a.type !== 'Missed'),
       conditions: pr.conditions,
       allergies: pr.allergies,
       medicines: pr.meds,
@@ -160,23 +168,34 @@ async function seedRahmanFamily(hina) {
     await LabReport.insertMany(REPORTS.map((r) => ({ parent: parent.id, ...r, status: 'read', resultsFound: 8 })));
     await Document.insertMany(DOCS[key].map((d) => ({ parent: parent.id, name: d.n, type: d.t, file: d.f, by: d.by })));
 
-    const today = weekdayIndex();
+    const supps = P.items.filter((i) => i.kind === 'supp');
     await Supplement.insertMany(
-      P.items
-        .filter((i) => i.kind === 'supp')
-        .map((i) => {
-          const x = SUPPX[key][i.id];
-          const week = x.week.map((v, d) => (d === today ? (i.done ? 1 : null) : d > today ? null : v));
-          return { parent: parent.id, code: i.id, title: i.title, simple: i.simple, dose: i.dose, time: i.time, ...x, week };
-        }),
+      supps.map((i) => {
+        const { week, ...x } = SUPPX[key][i.id]; // eslint-disable-line no-unused-vars
+        return { parent: parent.id, code: i.id, title: i.title, simple: i.simple, dose: i.dose, time: i.time, ...x };
+      }),
     );
-
     await MealPlan.create({ parent: parent.id, weekOf: '5–11 October', createdBy: hina.id, createdLabel: 'Made by Hina on 28 Sep', days: WEEK[key] });
-    await DailyLog.create({
+    // Checklists for the earlier days of this week, from the design's adherence record
+    // (its "today" was Friday), then today's list in the design's state.
+    const today = weekdayIndex();
+    const history = (code, d) => {
+      const v = SUPPX[key][code]?.week[d];
+      if (v !== null && v !== undefined) return v === 1;
+      return d === 4 ? P.items.find((i) => i.id === code).done : true;
+    };
+    const keys = weekDateKeys();
+    const logs = keys.slice(0, today).map((date, d) => ({
+      parent: parent.id,
+      date,
+      items: P.items.map((i) => ({ code: i.id, kind: i.kind, title: i.title, simple: i.simple, dose: i.dose, time: i.time, done: i.kind === 'supp' ? history(i.id, d) : true })),
+    }));
+    logs.push({
       parent: parent.id,
       date: todayKey(),
       items: P.items.map((i) => ({ code: i.id, kind: i.kind, title: i.title, simple: i.simple, dose: i.dose, time: i.time, done: i.done })),
     });
+    await DailyLog.insertMany(logs);
 
     const V = VISITS[key];
     const visitsByCode = {};
@@ -186,7 +205,7 @@ async function seedRahmanFamily(hina) {
         nutritionist: hina.id,
         status: 'completed',
         code: v.id,
-        scheduledFor: new Date(`${v.short} 2026 10:00`),
+        scheduledFor: lahoreTime(todayKey(new Date(`${v.short} 2026 12:00`)), '10:00 am'),
         date: v.date,
         short: v.short,
         title: v.title,
@@ -204,7 +223,7 @@ async function seedRahmanFamily(hina) {
       parent: parent.id,
       nutritionist: hina.id,
       status: 'scheduled',
-      scheduledFor: new Date(`12 October 2026 ${V.next.time}`),
+      scheduledFor: lahoreTime('2026-10-12', V.next.time),
       date: V.next.date,
       time: V.next.time,
       plan: V.next.plan,

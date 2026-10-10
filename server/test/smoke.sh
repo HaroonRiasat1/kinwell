@@ -18,3 +18,7 @@ echo "-- team"; curl -s $B/admin/nutritionists -H "Authorization: Bearer $AT" | 
 echo "-- families"; curl -s $B/admin/families -H "Authorization: Bearer $AT" | head -c 300; echo
 CODE=$(post /auth/parent-code '{"phone":"+923001112233"}' | j 'd["devCode"]')
 echo "-- parent code"; post /auth/parent-code/verify "{\"phone\":\"+923001112233\",\"code\":\"$CODE\"}" | head -c 200; echo
+echo "-- family makes a parent sign-in code, parent signs in with it (spaces in number)"
+FC=$(curl -s -XPOST $B/parents/$P/sign-in-code -H "$H" | j 'd["code"]')
+post /auth/parent-code/verify "{\"phone\":\"+92 300 111 2233\",\"code\":\"$FC\"}" | head -c 60; echo
+echo "-- same code twice is rejected"; post /auth/parent-code/verify "{\"phone\":\"0300 1112233\",\"code\":\"$FC\"}"; echo

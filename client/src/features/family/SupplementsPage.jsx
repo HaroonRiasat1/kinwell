@@ -22,7 +22,7 @@ function WeekDots({ week, todayIndex }) {
             : v === 0
               ? { background: 'var(--kw-attention-bg)', color: 'var(--kw-attention)' }
               : { background: 'rgba(255,255,255,0.6)', color: 'var(--kw-muted)' };
-        const word = v === 1 ? 'taken' : v === 0 ? 'missed' : d > todayIndex ? 'later' : 'not yet';
+        const word = v === 1 ? 'taken' : v === 0 ? 'missed' : d > todayIndex ? 'later' : d === todayIndex ? 'not yet' : 'not started';
         return (
           <span
             key={d}

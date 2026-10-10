@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { BrandMark } from '../../components/layout/index.js';
 import { Button, Card, Checkbox, Field, Icon, Segmented } from '../../components/ui/index.js';
 import { authApi } from '../../api/endpoints.js';
@@ -11,40 +11,35 @@ const ROLES = [
   { value: 'admin', label: 'Admin', hint: 'Kinwell operations and team.' },
 ];
 
-function CodeBoxes({ value, onChange }) {
-  const refs = useRef([]);
-  const digits = value.padEnd(6, ' ').split('');
-  const set = (i, d) => {
-    const next = digits.slice();
-    next[i] = d || ' ';
-    onChange(next.join('').replace(/\s+$/, ''));
-    if (d && i < 5) refs.current[i + 1]?.focus();
-  };
+/**
+ * Six-box code entry backed by ONE real input, so fast typing, paste and the
+ * phone's one-time-code autofill all land correctly. The boxes are drawn on top.
+ */
+export function CodeBoxes({ value, onChange, autoFocus = true }) {
+  const [focused, setFocused] = useState(false);
   return (
-    <div className="row" style={{ '--gap': '8px', flexWrap: 'nowrap' }} role="group" aria-label="6-digit code">
-      {digits.map((d, i) => (
-        <input
-          key={i}
-          ref={(el) => (refs.current[i] = el)}
-          className="kw-input"
-          inputMode="numeric"
-          autoComplete={i === 0 ? 'one-time-code' : 'off'}
-          aria-label={`Digit ${i + 1}`}
-          maxLength={1}
-          value={d.trim()}
-          onChange={(e) => set(i, e.target.value.replace(/\D/g, '').slice(-1))}
-          onKeyDown={(e) => e.key === 'Backspace' && !d.trim() && i > 0 && refs.current[i - 1]?.focus()}
-          onPaste={(e) => {
-            const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-            if (pasted) {
-              e.preventDefault();
-              onChange(pasted);
-            }
-          }}
-          style={{ width: 56, minHeight: 64, textAlign: 'center', fontSize: 28, fontWeight: 800, padding: 0 }}
-        />
-      ))}
-    </div>
+    <label style={{ position: 'relative', display: 'block', maxWidth: 380 }}>
+      <span className="sr-only">6-digit code</span>
+      <input
+        className="kw-codeinput"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        pattern="[0-9]*"
+        maxLength={6}
+        autoFocus={autoFocus}
+        value={value}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
+      />
+      <span className="kw-codeboxes" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, i) => (
+          <span key={i} className={`kw-codebox${focused && i === Math.min(value.length, 5) ? ' is-active' : ''}`}>
+            {value[i] ?? ''}
+          </span>
+        ))}
+      </span>
+    </label>
   );
 }
 
@@ -86,11 +81,9 @@ function SignInForm({ role, onRole, onSubmit, busy, error, onForgot, onCode }) {
       <Button type="submit" size="lg" iconRight={busy ? undefined : 'arrowRight'} disabled={busy} block>
         {busy ? 'Signing in…' : 'Sign in'}
       </Button>
-      {role === 'family' && (
-        <Button variant="glass" block onClick={onCode}>
-          Signing in for Ammi or Abbu? Use a text code
-        </Button>
-      )}
+      <Button variant="glass" block icon="phone" onClick={onCode}>
+        I'm a parent: sign in with my phone number
+      </Button>
       <p className="text-sm muted" style={{ textAlign: 'center' }}>
         New to Kinwell? <Link to="/onboarding">Set up your family</Link>
       </p>
@@ -98,10 +91,11 @@ function SignInForm({ role, onRole, onSubmit, busy, error, onForgot, onCode }) {
   );
 }
 
-function ParentCodeForm({ onDone, onBack }) {
-  const [phone, setPhone] = useState('');
+function ParentCodeForm({ initialPhone = '', onDone, onBack }) {
+  const [phone, setPhone] = useState(initialPhone);
   const [code, setCode] = useState('');
-  const [sent, setSent] = useState(null);
+  // When we arrive from a family member's link, the phone is known and the code is in hand.
+  const [step, setStep] = useState(initialPhone ? { delivery: 'family', fromLink: true } : null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const run = async (fn) => {
@@ -115,27 +109,46 @@ function ParentCodeForm({ onDone, onBack }) {
       setBusy(false);
     }
   };
+  const submit = () =>
+    run(async () => {
+      if (step) return onDone(await authApi.verifyParentCode(phone, code));
+      setStep(await authApi.requestParentCode(phone));
+    });
   return (
     <form
       className="stack"
       onSubmit={(e) => {
         e.preventDefault();
-        run(async () => (sent ? onDone(await authApi.verifyParentCode(phone, code)) : setSent(await authApi.requestParentCode(phone))));
+        submit();
       }}
     >
-      <h2 style={{ fontSize: 30, fontWeight: 800 }}>{sent ? 'Enter the code' : 'Sign in with a code'}</h2>
-      <p className="muted">{sent ? `We sent a 6-digit code to ${phone}.` : "Enter your parent's mobile number. We'll text them a code — no password needed."}</p>
-      {!sent && <Field label="Mobile number" type="tel" autoComplete="tel" placeholder="+92 300 111 2233" value={phone} onChange={(e) => setPhone(e.target.value)} required />}
-      {sent && <CodeBoxes value={code} onChange={setCode} />}
-      {sent?.devCode && <p className="kw-field__hint">Development mode: the code is {sent.devCode}.</p>}
+      <h2 style={{ fontSize: 30, fontWeight: 800 }}>{step ? 'Enter your code' : 'Sign in with your phone'}</h2>
+      {!step && <p className="muted">Type your mobile number. No password needed.</p>}
+      {!step && (
+        <Field label="Your mobile number" type="tel" autoComplete="tel" inputMode="tel" placeholder="0300 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ fontSize: 22, minHeight: 60 }} />
+      )}
+      {step?.delivery === 'sms' && <p className="muted">We've sent a 6-digit code by text message to {phone}.</p>}
+      {step?.delivery === 'family' && (
+        <div className="kw-notice kw-notice--normal" style={{ fontSize: 18 }}>
+          <strong>{step.fromLink ? 'Type the code your family sent you.' : 'Ask your son or daughter for your code.'}</strong>
+          {!step.fromLink && <span>They can make one in their Kinwell app, on your profile, under “Help with sign in”. They can send it to you on WhatsApp.</span>}
+        </div>
+      )}
+      {step && <CodeBoxes value={code} onChange={setCode} />}
+      {step?.devCode && <p className="kw-field__hint">Development mode: the code is {step.devCode}.</p>}
       {error && (
         <p role="alert" className="kw-field__error">
           {error}
         </p>
       )}
-      <Button type="submit" size="lg" block disabled={busy || (sent && code.length < 6)}>
-        {busy ? 'Please wait…' : sent ? 'Sign in' : 'Send code'}
+      <Button type="submit" size="lg" block disabled={busy || (step && code.length < 6)}>
+        {busy ? 'Please wait…' : step ? 'Sign in' : 'Continue'}
       </Button>
+      {step && !step.fromLink && (
+        <Button variant="link" onClick={() => (setStep(null), setCode(''))}>
+          Use a different number
+        </Button>
+      )}
       <Button variant="link" onClick={onBack}>
         Back to email sign in
       </Button>
@@ -177,7 +190,7 @@ function ForgotForm({ onBack }) {
   );
 }
 
-export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, busy, error }) {
+export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, busy, error, parentPhone = '' }) {
   return (
     <div className="kw-backdrop" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 32, padding: 'clamp(20px, 4vw, 48px)', alignItems: 'center' }}>
       <div className="stack" style={{ '--gap': '24px', maxWidth: 560 }}>
@@ -195,7 +208,7 @@ export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, b
         {mode === 'signin' && (
           <SignInForm role={role} onRole={setRole} onSubmit={onSubmit} busy={busy} error={error} onForgot={() => setMode('forgot')} onCode={() => setMode('code')} />
         )}
-        {mode === 'code' && <ParentCodeForm onDone={onSession} onBack={() => setMode('signin')} />}
+        {mode === 'code' && <ParentCodeForm initialPhone={parentPhone} onDone={onSession} onBack={() => setMode('signin')} />}
         {mode === 'forgot' && <ForgotForm onBack={() => setMode('signin')} />}
       </Card>
     </div>
@@ -203,7 +216,9 @@ export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, b
 }
 
 export default function LoginPage() {
-  const [mode, setMode] = useState('signin');
+  // /login?as=parent&phone=… is the link a family member sends with a code.
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState(params.get('as') === 'parent' ? 'code' : 'signin');
   const [role, setRole] = useState('family');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -225,5 +240,5 @@ export default function LoginPage() {
       setBusy(false);
     }
   };
-  return <LoginView mode={mode} setMode={setMode} role={role} setRole={(r) => (setRole(r), setError(null))} onSubmit={onSubmit} onSession={onSession} busy={busy} error={error} />;
+  return <LoginView mode={mode} setMode={setMode} role={role} setRole={(r) => (setRole(r), setError(null))} onSubmit={onSubmit} onSession={onSession} busy={busy} error={error} parentPhone={params.get('phone') ?? ''} />;
 }

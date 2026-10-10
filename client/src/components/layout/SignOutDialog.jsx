@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, Checkbox, Modal } from '../ui/index.js';
 
-export function SignOutDialog({ open, onCancel, onConfirm }) {
+export function SignOutDialog({ open, onCancel, onConfirm, message = "You'll need your email and password to sign back in. Your family's information stays safe." }) {
   const [everywhere, setEverywhere] = useState(false);
   const [busy, setBusy] = useState(false);
   const confirm = async () => {
@@ -17,7 +17,7 @@ export function SignOutDialog({ open, onCancel, onConfirm }) {
       <h2 id="so-h" style={{ fontSize: 26, fontWeight: 800 }}>
         Sign out of Kinwell?
       </h2>
-      <p className="muted">You'll need your email and password to sign back in. Your family's information stays safe.</p>
+      <p className="muted">{message}</p>
       <Checkbox label="Also sign out on my other devices" checked={everywhere} onChange={(e) => setEverywhere(e.target.checked)} />
       <div className="row">
         <Button icon="signOut" onClick={confirm} disabled={busy}>

@@ -345,6 +345,45 @@
   color: var(--kw-teal-800);
 }
 
+.kw-parent-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px 24px;
+  border-radius: var(--kw-r-xl);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: var(--kw-blur);
+  -webkit-backdrop-filter: var(--kw-blur);
+}
+.kw-parent-call {
+  min-height: 76px;
+  font-size: 24px;
+  justify-content: flex-start;
+  padding: 0 24px;
+  gap: 16px;
+}
+.kw-parent-call__sub {
+  font-weight: 500;
+  opacity: 0.85;
+  margin-left: 6px;
+}
+/* On phones, put the big button under the words so neither gets squeezed. */
+@media (max-width: 560px) {
+  .kw-parent-view {
+    padding: 20px 16px 48px;
+  }
+  .kw-parent-task {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 18px;
+  }
+  .kw-parent-task__btn {
+    width: 100%;
+  }
+}
+
 /* ===== Onboarding steps ===== */
 .kw-steps li {
   display: flex;

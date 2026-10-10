@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as raw from '../controllers/parent.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import * as s from '../validators/schemas.js';
 import { wrapAll } from './helpers.js';
@@ -25,5 +25,6 @@ router.post('/:parentId/visits/reschedule', validate(s.rescheduleSchema), c.resc
 router.get('/:parentId/documents', c.documents);
 router.get('/:parentId/messages', c.messages);
 router.post('/:parentId/messages', validate(s.messageSchema), c.postMessage);
+router.post('/:parentId/sign-in-code', requireRole('family'), c.signInCode);
 
 export default router;

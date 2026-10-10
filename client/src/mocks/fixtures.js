@@ -139,10 +139,11 @@ export const threads = ['ammi', 'abbu'].map((key) => {
 export const home = (key = 'ammi') => ({
   ...dashboard(key),
   children: [
-    { id: 'sana', name: 'Sana', city: 'London', relation: 'Your daughter' },
-    { id: 'bilal', name: 'Bilal', city: 'Dubai', relation: 'Your son' },
+    { id: 'sana', name: 'Sana', city: 'London', relation: 'Your daughter', phone: '+447700900412' },
+    { id: 'bilal', name: 'Bilal', city: 'Dubai', relation: 'Your son', phone: '+971501234567' },
   ],
-  nextVisit: { date: PARENTS[key].nextVisitLong, plan: VISITS[key].next.plan },
+  nextVisit: { date: PARENTS[key].nextVisitLong, nextIn: PARENTS[key].nextIn, plan: VISITS[key].next.plan },
+  latestNote: { text: PARENTS[key].note, from: 'Hina Qureshi', after: PARENTS[key].lastVisit },
 });
 
 export const clients = CLIENTS.map((c, i) => ({ id: `c${i}`, ...c }));

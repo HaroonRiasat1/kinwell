@@ -1,12 +1,14 @@
 import { LIB_SUPPS as SUPPLEMENT_CATALOG, MARKER_NAMES } from '@kinwell/shared';
 import { Dish, Family, MealPlan, Message, Parent, Visit } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
+import { visitSummary } from './parent.service.js';
 
 export async function listClients(nutritionist) {
   const parents = await Parent.find({ nutritionist: nutritionist.id }).sort('createdAt');
   const families = await Family.find({ _id: { $in: parents.map((p) => p.family) } }).populate('mainContact');
   const byId = Object.fromEntries(families.map((f) => [f.id, f]));
-  return parents.map((p) => {
+  const visits = await Promise.all(parents.map((p) => visitSummary(p)));
+  return parents.map((p, i) => {
     const contact = byId[String(p.family)]?.mainContact;
     const [first, last] = (contact?.name ?? '').split(' ');
     return {
@@ -16,8 +18,8 @@ export async function listClients(nutritionist) {
       area: p.area,
       family: contact ? `${first} ${last?.[0] ?? ''}. · ${contact.city}` : '',
       status: p.overall,
-      last: p.lastVisit,
-      next: p.nextVisit,
+      last: visits[i].lastVisit,
+      next: visits[i].nextVisit,
     };
   });
 }

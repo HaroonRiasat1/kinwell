@@ -28,6 +28,7 @@ export const parentApi = {
   documents: (id) => api.get(`${p(id)}/documents`),
   messages: (id) => api.get(`${p(id)}/messages`),
   sendMessage: (id, text) => api.post(`${p(id)}/messages`, { text }),
+  signInCode: (id) => api.post(`${p(id)}/sign-in-code`),
 };
 
 export const workspaceApi = {

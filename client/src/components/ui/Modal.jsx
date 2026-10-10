@@ -1,6 +1,10 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
-/** Accessible dialog: focuses itself, closes on Escape or backdrop click. */
+/**
+ * Accessible dialog: focuses itself, closes on Escape or backdrop click.
+ * Rendered into <body> so containers (e.g. the app shell's container query) can't trap or cover it.
+ */
 export function Modal({ open, onClose, labelledBy, width, children }) {
   const panel = useRef(null);
   useEffect(() => {
@@ -15,11 +19,12 @@ export function Modal({ open, onClose, labelledBy, width, children }) {
     };
   }, [open, onClose]);
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="kw-modal" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div ref={panel} className="kw-modal__panel" role="dialog" aria-modal="true" aria-labelledby={labelledBy} tabIndex={-1} style={width ? { '--w': `${width}px` } : undefined}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

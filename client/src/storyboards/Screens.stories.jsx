@@ -27,6 +27,7 @@ export const Reschedule = { render: () => <S.Visits rescheduleOpen />, name: 'Fa
 export const Documents = { ...parentArg, render: (a) => <S.Documents {...a} />, name: 'Family / Documents' };
 export const Messages = { ...parentArg, render: (a) => <S.Messages {...a} />, name: 'Family / Messages' };
 
+export const SignInHelp = { render: () => <S.ParentSignInHelp />, name: 'Family / Help parent sign in' };
 export const ParentView = { ...parentArg, render: (a) => <S.ParentHome {...a} />, name: 'Parent / Simple view' };
 
 export const Clients = { render: () => <S.Clients />, name: 'Nutritionist / Clients' };

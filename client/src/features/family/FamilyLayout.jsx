@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { AppShell, PageHeader, ParentSwitcher } from '../../components/layout/index.js';
 import { ErrorState, Skeleton } from '../../components/ui/index.js';
@@ -5,6 +6,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { parentApi } from '../../api/endpoints.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
 import { todayGreeting } from '../../lib/dates.js';
+import { ParentSignInDialog } from './ParentSignInHelp.jsx';
 
 const SECTIONS = [
   ['dashboard', 'Dashboard', 'home', 'Home'],
@@ -30,6 +32,7 @@ const titleFor = (section, p) =>
 
 /** Shell for everything a family member sees, scoped to one parent at a time. */
 export function FamilyShell({ parents, parent, section, user, onSelectParent, children }) {
+  const [helpOpen, setHelpOpen] = useState(false);
   const base = `/family/${parent.id}`;
   const nav = SECTIONS.map(([s, label, icon, short]) => ({ to: `${base}/${s}`, label, icon, short, badge: s === 'messages' ? 2 : 0 }));
   const tabs = nav.filter((n) => n.icon);
@@ -44,15 +47,21 @@ export function FamilyShell({ parents, parent, section, user, onSelectParent, ch
       home={`${base}/dashboard`}
       person={user && { name: user.name, sub: user.city }}
       footerAction={
-        <Link className="kw-sidebar__cta" to={`${base}/simple`}>
-          Open {parent.short}'s simple view
-        </Link>
+        <>
+          <Link className="kw-sidebar__cta" to={`${base}/simple`}>
+            Open {parent.short}'s simple view
+          </Link>
+          <button type="button" className="kw-sidebar__cta" style={{ marginTop: 6, cursor: 'pointer', textAlign: 'left' }} onClick={() => setHelpOpen(true)}>
+            Help {parent.short} sign in
+          </button>
+        </>
       }
     >
       <PageHeader eyebrow={sub} title={titleFor(section, parent)}>
         <ParentSwitcher parents={parents} activeId={parent.id} onSelect={onSelectParent} />
       </PageHeader>
       {children}
+      <ParentSignInDialog open={helpOpen} parent={parent} onClose={() => setHelpOpen(false)} />
     </AppShell>
   );
 }
