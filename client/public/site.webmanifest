@@ -1,0 +1,13 @@
+{
+  "name": "Kinwell",
+  "short_name": "Kinwell",
+  "description": "Home nutrition care for parents in Lahore, with clear updates for the family abroad.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f1ea",
+  "theme_color": "#2c6e63",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

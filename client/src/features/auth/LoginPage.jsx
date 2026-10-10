@@ -5,6 +5,7 @@ import { Button, Card, Checkbox, Field, Icon, Segmented } from '../../components
 import { authApi } from '../../api/endpoints.js';
 import { HOME_FOR_ROLE, useOptionalAuth } from '../../context/AuthContext.jsx';
 import { LanguageSwitcher, errorText, useI18n } from '../../i18n/index.js';
+import { usePageTitle } from '../../hooks/usePageTitle.js';
 
 const ROLES = [
   { value: 'family', label: 'Family member', hint: 'See updates about your parents.' },
@@ -220,6 +221,7 @@ export function LoginView({ mode, setMode, role, setRole, onSubmit, onSession, b
 }
 
 export default function LoginPage() {
+  usePageTitle('Sign in');
   // /login?as=parent&phone=… is the link a family member sends with a code.
   const [params] = useSearchParams();
   const [mode, setMode] = useState(params.get('as') === 'parent' ? 'code' : 'signin');

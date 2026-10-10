@@ -157,6 +157,18 @@ This runs the lab-report parser tests (`server/test/readReport.test.js`, no API 
 every role's main flows and the permission boundaries between them (`server/test/e2e.test.js`). `npm run test:smoke -w server` is a
 quicker manual check that prints raw responses.
 
+## Search engines and link previews
+
+- **The homepage is pre-rendered** at build time (`client/src/prerender.jsx`, `client/scripts/prerender.mjs`),
+  so search engines and link previews read the real content without running JavaScript. The page head
+  has a title, description, canonical link, Open Graph/Twitter cards (`client/public/og-image.png`) and
+  schema.org data (organisation, service area in Lahore, FAQ) built from the same text the page shows.
+- **Signed-in areas are private:** they're served from `app.html` with `noindex` (meta tag and
+  `X-Robots-Tag` header, see `vercel.json`) and disallowed in `robots.txt`.
+- `robots.txt` and `sitemap.xml` are generated on each build; unknown addresses get a real 404 page.
+- The site address comes from `SITE_URL` (default `https://kinwell-sepia.vercel.app`, in
+  `client/site.config.js`). Set it in Vercel when you move to your own domain, and redeploy.
+
 ## Reading lab reports (OCR)
 
 Families add a report on the Lab tests page as a PDF or a phone photo. The numbers are read **on the

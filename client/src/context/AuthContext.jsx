@@ -9,7 +9,8 @@ export const HOME_FOR_ROLE = { family: '/family', nutritionist: '/workspace/toda
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [ready, setReady] = useState(false);
+  // With no saved session there is nothing to wait for: render straight away (the homepage is pre-rendered).
+  const [ready, setReady] = useState(() => !tokenStore.get());
   const { setLanguage } = useI18n();
 
   // Parents see the app in the language saved on their account (e.g. Urdu).

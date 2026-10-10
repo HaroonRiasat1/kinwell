@@ -6,7 +6,7 @@ import { SignOutDialog } from './SignOutDialog.jsx';
 
 export function BrandMark({ to = '/', size = 36 }) {
   return (
-    <NavLink to={to} className="kw-brand" aria-label="Kinwell home">
+    <NavLink to={to} className="kw-brand">
       <span className="kw-brand__mark" aria-hidden="true" style={{ width: size, height: size }}>
         K
       </span>

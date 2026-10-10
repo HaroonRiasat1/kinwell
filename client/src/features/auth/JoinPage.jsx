@@ -5,9 +5,11 @@ import { Button, Card, EmptyState, Field, SkeletonCard } from '../../components/
 import { useApi } from '../../hooks/useApi.js';
 import { authApi } from '../../api/endpoints.js';
 import { HOME_FOR_ROLE, useOptionalAuth } from '../../context/AuthContext.jsx';
+import { usePageTitle } from '../../hooks/usePageTitle.js';
 
 /** Where an invite link lands: create an account and join the family's care team. */
 export default function JoinPage() {
+  usePageTitle('Join your family');
   const { token } = useParams();
   const auth = useOptionalAuth();
   const navigate = useNavigate();

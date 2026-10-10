@@ -6,3 +6,4 @@ storybook-static
 .DS_Store
 .vercel
 client/public/ocr
+dist-ssr

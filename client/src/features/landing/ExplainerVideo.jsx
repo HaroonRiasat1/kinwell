@@ -318,7 +318,7 @@ export function ExplainerVideo({ autoPlay = true }) {
 
       <div className="ex-chapters" role="group" aria-label="Chapters">
         {SCENES.map((s, i) => (
-          <button key={s.title} type="button" className={`ex-chapter${i === scene ? ' is-current' : ''}`} onClick={() => go(i)} aria-current={i === scene ? 'step' : undefined}>
+          <button key={s.title} type="button" className={`ex-chapter${i === scene ? ' is-current' : ''}`} onClick={() => go(i)} aria-current={i === scene ? 'step' : undefined} aria-label={`Chapter ${i + 1}: ${s.title}`}>
             <span className="ex-chapter__bar">
               <span style={{ width: `${i < scene ? 100 : i === scene ? Math.min(100, (elapsed / SCENE_MS) * 100) : 0}%` }} />
             </span>

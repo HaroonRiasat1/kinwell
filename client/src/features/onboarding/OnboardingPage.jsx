@@ -6,6 +6,7 @@ import { Avatar, Button, Card, Chip, ChipGroup, Field, Icon } from '../../compon
 import { useApi } from '../../hooks/useApi.js';
 import { onboardingApi } from '../../api/endpoints.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
+import { usePageTitle } from '../../hooks/usePageTitle.js';
 
 const CITIES = [
   ['London', 'London, United Kingdom (GMT+1)', 'Europe/London'],
@@ -207,6 +208,7 @@ export function OnboardingView({ step, form, setForm, nutritionists, onBack, onN
 }
 
 export default function OnboardingPage() {
+  usePageTitle('Set up your family');
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(initialOnboarding);
   const [busy, setBusy] = useState(false);

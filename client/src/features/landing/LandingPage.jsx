@@ -5,6 +5,7 @@ import { MarkerCard } from '../family/DashboardPage.jsx';
 // Example data from the design (the Rahman family) so previews are real components, not screenshots.
 import { dashboard, labs } from '../../mocks/fixtures.js';
 import { ExplainerVideo } from './ExplainerVideo.jsx';
+import { usePageTitle } from '../../hooks/usePageTitle.js';
 import './landing.css';
 
 const demo = dashboard('ammi');
@@ -65,7 +66,8 @@ function HeroCollage() {
   const p = demo.parent;
   const done = demo.checklist.filter((i) => i.done).length;
   return (
-    <div className="lp-collage" aria-hidden="true">
+    // Decorative preview of the app: hidden from screen readers and out of the tab order.
+    <div className="lp-collage" aria-hidden="true" inert="">
       <div className="lp-collage__main lp-glass">
         <div className="row" style={{ '--gap': '10px' }}>
           <Avatar name="Ammi" size={44} tone="sage" />
@@ -222,7 +224,7 @@ const FEATURES = [
   { span: 'lp-span-2', icon: 'lock', title: 'Private by design', text: 'Only the family, the assigned nutritionist and the parent can see a record. Sign out of every device at once.' },
 ];
 
-const FAQ = [
+export const FAQ = [
   ['Where do you visit?', 'Kinwell nutritionists visit homes across Lahore today, including Model Town, Gulberg, DHA, Johar Town and Cantt. More cities are planned.'],
   ['Who are the nutritionists?', 'Registered dietitians and clinical nutritionists. You can see each one’s experience, languages and the areas they cover before you choose.'],
   ['My parents aren’t good with phones. Will this work?', 'Yes. Their view has one column, 24px text and one big button per task. They sign in with a code sent by text message, so there’s no password to remember.'],
@@ -231,6 +233,7 @@ const FAQ = [
 ];
 
 export default function LandingPage() {
+  usePageTitle();
   const root = useReveal();
   const [who, setWho] = useState('family');
   const aud = AUDIENCES[who];

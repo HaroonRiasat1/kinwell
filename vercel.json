@@ -15,8 +15,12 @@
       "destination": "/api"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin|join)/(.*)",
+      "destination": "/app.html"
     }
   ],
   "headers": [
@@ -42,6 +46,51 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin|join|api)/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/app.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/ocr/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
         }
       ]
     }
