@@ -21,17 +21,18 @@ export const uploadSchema = z.object({ fileName: z.string().trim().min(1), lab: 
 
 export const visitLogSchema = z.object({
   title: z.string().trim().optional(),
-  vitals: z.array(z.object({ label: z.string(), value: z.string().trim().optional().default(''), unit: z.string().default('') })).default([]),
+  vitals: z.array(z.object({ label: z.string(), value: z.string().trim().max(20).optional().default(''), unit: z.string().default('') })).max(12).default([]),
   observations: z.array(z.string()).default([]),
   mood: z.string().optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(4000).optional(),
   tests: z.array(z.string()).default([]),
 });
-export const planDaySchema = z.object({
-  meals: z.record(z.enum(['Breakfast', 'Lunch', 'Dinner', 'Snack']), z.string().nullable()),
+export const planWeekSchema = z.object({
+  days: z.array(z.array(z.string().nullable()).max(4)).length(7),
   supplements: z.array(z.string()).default([]),
   links: z.record(z.string(), z.string()).default({}),
 });
+export const rescheduleDecisionSchema = z.object({ decision: z.enum(['accept', 'decline']) });
 export const familyUpdateSchema = z.object({ text: z.string().trim().min(1).max(4000) });
 
 export const onboardingSchema = z.object({

@@ -16,10 +16,11 @@ import { ParentSignInDialog } from '../features/family/ParentSignInHelp.jsx';
 import { MessagesView } from '../features/family/MessagesPage.jsx';
 import { ParentHomeView } from '../features/parent/ParentHomePage.jsx';
 import { WorkspaceShell } from '../features/workspace/WorkspaceLayout.jsx';
+import { TodayView } from '../features/workspace/TodayPage.jsx';
 import { ClientsView } from '../features/workspace/ClientsPage.jsx';
+import { ClientView } from '../features/workspace/ClientPage.jsx';
 import { emptyVisitForm, VisitFormView } from '../features/workspace/VisitPage.jsx';
-import { initialPlan, PlanBuilderView } from '../features/workspace/PlanBuilderPage.jsx';
-import { SendUpdateView } from '../features/workspace/SendUpdatePage.jsx';
+import { PlanBuilderView } from '../features/workspace/PlanBuilderPage.jsx';
 import { AdminShell } from '../features/admin/AdminLayout.jsx';
 import { AdminOverviewView } from '../features/admin/AdminOverviewPage.jsx';
 import { FamiliesView } from '../features/admin/FamiliesPage.jsx';
@@ -147,41 +148,58 @@ export function ParentHome({ parentKey = 'ammi', familyPreview = false }) {
 
 // ---------- Nutritionist ----------
 const Workspace = ({ title, sub, children }) => (
-  <WorkspaceShell user={fx.HINA_USER} clientId="c0" title={title} sub={sub}>
+  <WorkspaceShell user={fx.HINA_USER} unread={2} title={title} sub={sub}>
     {children}
   </WorkspaceShell>
+);
+export const Today = () => (
+  <Workspace title="Today" sub="Saturday, 10 October">
+    <TodayView data={fx.workspaceToday} inbox={fx.workspaceInbox} onDecide={noop} />
+  </Workspace>
 );
 export function Clients() {
   const [filter, setFilter] = useState('all');
   const [q, setQ] = useState('');
   return (
-    <Workspace title="Your clients" sub="Friday 9 October · 3 visits today">
-      <ClientsView clients={fx.clients} filter={filter} onFilter={setFilter} query={q} onQuery={setQ} onStart={noop} />
+    <Workspace title="Your clients" sub="Saturday 10 October · most urgent first">
+      <ClientsView clients={fx.clients} filter={filter} onFilter={setFilter} query={q} onQuery={setQ} />
     </Workspace>
   );
 }
-export function VisitForm({ saved = false }) {
-  const [form, setForm] = useState(emptyVisitForm);
-  const parent = { short: 'Ammi', fullName: 'Fatima Rahman', age: 72, area: 'Model Town' };
+export const ClientRecord = () => (
+  <Workspace title="Fatima Rahman, 72" sub="Model Town · your client">
+    <ClientView summary={fx.workspaceClient('ammi')} dash={fx.dashboard('ammi')} visits={fx.visits('ammi')} />
+  </Workspace>
+);
+const VISIT_PARENT = { short: 'Ammi', fullName: 'Fatima Rahman', age: 72, area: 'Model Town' };
+export function VisitForm({ saved = false, attention = false, typo = false }) {
+  const [form, setForm] = useState(() => (typo ? { ...emptyVisitForm(), vitals: { 'Blood pressure': '1650/100' } } : emptyVisitForm()));
+  const result = attention
+    ? { attention: 2, readings: [{ label: 'Blood pressure', value: '165/100', unit: 'mmHg', status: 'attention' }, { label: 'Fasting sugar', value: '186', unit: 'mg/dL', status: 'attention' }, { label: 'Weight', value: '63.6', unit: 'kg', status: 'normal' }] }
+    : { attention: 0, readings: [{ label: 'Blood pressure', value: '126/78', unit: 'mmHg', status: 'normal' }] };
   return (
-    <Workspace title="Home visit · Ammi" sub="Fatima Rahman, 72 · Model Town · started 11:04 am">
-      <VisitFormView parent={parent} lastMeasurements={fx.visits('ammi').past[0].meas} form={form} setForm={setForm} onSave={noop} saving={false} saved={saved} onNext={noop} />
+    <Workspace title="Home visit · Ammi" sub="Fatima Rahman, 72 · Model Town">
+      <VisitFormView
+        parent={VISIT_PARENT}
+        lastMeasurements={fx.visits('ammi').past[0].meas}
+        form={form}
+        setForm={setForm}
+        onSave={noop}
+        saving={false}
+        saved={saved}
+        result={result}
+        errors={typo ? { 'Blood pressure': 'That blood pressure looks mistyped. Check both numbers.' } : {}}
+        onNext={noop}
+      />
     </Workspace>
   );
 }
 export function PlanBuilder() {
-  const [plan, setPlan] = useState(initialPlan);
+  const [plan, setPlan] = useState(() => fx.weekPlan('ammi'));
+  const [day, setDay] = useState(0);
   return (
-    <Workspace title="Plan builder · Ammi" sub="Drag meals and supplements into the plan. Link each one to a lab result.">
-      <PlanBuilderView library={fx.library} plan={plan} setPlan={setPlan} onSave={noop} saving={false} saved={false} />
-    </Workspace>
-  );
-}
-export function SendUpdate({ sent = false }) {
-  const [text, setText] = useState(DEFAULT_UPD);
-  return (
-    <Workspace title="Send update to the family" sub="Sana and Bilal will see this in their messages.">
-      <SendUpdateView author="Hina Qureshi" text={text} onText={setText} onSend={noop} sending={false} sent={sent} onAnother={noop} />
+    <Workspace title="Meal plan · Fatima Rahman (Ammi)" sub="Plan the week, link each item to a result, then publish it to the family.">
+      <PlanBuilderView library={fx.library} plan={plan} setPlan={setPlan} day={day} setDay={setDay} onSave={noop} onPublish={noop} busy={null} dirty />
     </Workspace>
   );
 }

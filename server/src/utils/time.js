@@ -49,3 +49,21 @@ export function relativeDays(n) {
   if (n === 1) return 'Tomorrow';
   return `In ${n} days`;
 }
+
+/** "2026-10-12" + "11:00 am" → that moment in Lahore (UTC+5, no daylight saving). */
+export function lahoreDateTime(dateKey, clock = '9:00 am') {
+  const [, h, m = '00', ap] = String(clock).match(/(\d{1,2}):?(\d{2})?\s*(am|pm)/i) ?? [null, '9', '00', 'am'];
+  const hour = (Number(h) % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0);
+  return new Date(`${dateKey}T${String(hour).padStart(2, '0')}:${m}:00+05:00`);
+}
+
+/** "Monday 12 October" (no year) → "2026-10-12", choosing the next such date from now. */
+export function dateKeyFromLabel(label, now = new Date()) {
+  const m = String(label).match(/(\d{1,2})\s+([A-Za-z]+)/);
+  if (!m) return null;
+  for (const year of [now.getFullYear(), now.getFullYear() + 1]) {
+    const t = Date.parse(`${m[1]} ${m[2]} ${year} 12:00`);
+    if (!Number.isNaN(t) && t >= now.getTime() - 24 * 3600 * 1000) return todayKey(new Date(t));
+  }
+  return null;
+}

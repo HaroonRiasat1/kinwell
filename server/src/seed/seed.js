@@ -407,6 +407,19 @@ async function seedVisitRhythm(team, clients, { notLogged = {} } = {}) {
   const now = Date.now();
   const visits = [];
   const messages = [];
+  // One visit per hour per nutritionist, so nobody is double-booked.
+  const taken = new Set((await Visit.find({}, 'nutritionist scheduledFor')).map((v) => `${v.nutritionist}-${v.scheduledFor.getTime()}`));
+  const book = (nutId, date, hour) => {
+    for (let i = 0; i < 8; i++) {
+      const h = 9 + ((hour - 9 + i) % 8);
+      const at = lahoreAt(date, h);
+      if (!taken.has(`${nutId}-${at.getTime()}`)) {
+        taken.add(`${nutId}-${at.getTime()}`);
+        return at;
+      }
+    }
+    return lahoreAt(date, hour);
+  };
   for (const [key, list] of Object.entries(clients)) {
     const nut = team[key];
     const onLeave = nut.nutritionist?.availability === 'on_leave';
@@ -416,10 +429,10 @@ async function seedVisitRhythm(team, clients, { notLogged = {} } = {}) {
       // Someone on leave last saw clients before their leave began (over a week ago).
       const offset = forced?.daysAgo ?? (onLeave ? between(8, 13) : between(0, 13));
       const hour = forced?.hour ?? between(9, 16);
-      const last = lahoreAt(new Date(now - offset * DAY_MS), hour);
-      const previous = new Date(last.getTime() - 14 * DAY_MS);
-      let next = new Date(last.getTime() + 14 * DAY_MS);
-      if (onLeave && nut.nutritionist.leaveUntil && next < nut.nutritionist.leaveUntil) next = lahoreAt(new Date(nut.nutritionist.leaveUntil.getTime() + between(1, 5) * DAY_MS), hour);
+      const last = book(nut.id, new Date(now - offset * DAY_MS), hour);
+      const previous = book(nut.id, new Date(last.getTime() - 14 * DAY_MS), hour);
+      let next = book(nut.id, new Date(last.getTime() + 14 * DAY_MS), hour);
+      if (onLeave && nut.nutritionist.leaveUntil && next < nut.nutritionist.leaveUntil) next = book(nut.id, new Date(nut.nutritionist.leaveUntil.getTime() + between(1, 5) * DAY_MS), hour);
 
       for (const at of [previous, last]) {
         if (at.getTime() > now) {
@@ -500,6 +513,41 @@ export async function seed() {
     notLogged: { [mumtaz.id]: { daysAgo: 4, hour: 11 }, [another.id]: { daysAgo: 2, hour: 15 } },
   });
   await seedOps(nutritionists, { tariq: rahmanParents.find((p) => p.key === 'abbu'), rahmanFamily }, byName, clients);
+  await seedHinasDay(nutritionists.hina, clients.hina, byName, rahmanParents);
+}
+
+/** Gives the demo nutritionist a real day: three visits still to do today, a request, a question. */
+async function seedHinasDay(hina, hinaClients, byName, rahmanParents) {
+  const now = Date.now();
+  const slot = (h) => new Date(Math.ceil((now + h * 3600 * 1000) / (30 * 60 * 1000)) * 30 * 60 * 1000);
+  const others = hinaClients.filter((p) => !rahmanParents.some((r) => r.id === p.id) && p.id !== byName.Khan.parents[0].id).slice(0, 3);
+  for (const [i, p] of others.entries()) {
+    const next = await Visit.findOne({ parent: p.id, status: 'scheduled', scheduledFor: { $gt: new Date() } }).sort('scheduledFor');
+    if (next) await next.updateOne({ scheduledFor: slot(1 + i * 1.5) });
+  }
+  // Imran Khan asked to move his mother's next visit by a day.
+  const zubaida = byName.Khan.parents[0];
+  const zv = await Visit.findOne({ parent: zubaida.id, status: 'scheduled', scheduledFor: { $gt: new Date() } }).sort('scheduledFor');
+  if (zv) {
+    const moved = new Date(zv.scheduledFor.getTime() + DAY_MS);
+    const day = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Karachi' }).format(moved).replace(',', '');
+    // Ask for a time Hina actually has free that day.
+    let time = '10:00 am';
+    for (const h of [10, 11, 12, 13, 14, 15, 16]) {
+      const at = lahoreAt(moved, h);
+      const busy = await Visit.exists({ nutritionist: hina.id, scheduledFor: { $gt: new Date(at - 3600 * 1000), $lt: new Date(at.getTime() + 3600 * 1000) } });
+      if (!busy) {
+        time = `${h > 12 ? h - 12 : h}:00 ${h >= 12 ? 'pm' : 'am'}`;
+        break;
+      }
+    }
+    await zv.updateOne({ status: 'reschedule_requested', requestedSlot: { day, time } });
+  }
+  // A question from Sana waiting for Hina.
+  const sana = await User.findOne({ email: 'sana.rahman@gmail.com' });
+  const ammi = rahmanParents.find((p) => p.key === 'ammi');
+  const at = new Date(now - 3 * 3600 * 1000);
+  await Message.insertMany([{ parent: ammi.id, from: sana.id, fromKey: 'sana', fromName: sana.name, fromRole: 'Daughter', text: "Hina, Ammi says her ankles are swelling in the evenings again. Should we be worried, or can it wait until Monday?", timeLabel: 'Today', createdAt: at, updatedAt: at }], { timestamps: false });
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

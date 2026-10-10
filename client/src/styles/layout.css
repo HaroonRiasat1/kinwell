@@ -483,3 +483,16 @@
   place-items: center;
   flex-shrink: 0;
 }
+
+/* Show a table on wide screens and cards on narrow ones (by the shell's width). */
+.kw-narrow-only {
+  display: none !important;
+}
+@container shell (max-width: 760px) {
+  .kw-wide-only {
+    display: none !important;
+  }
+  .kw-narrow-only {
+    display: flex !important;
+  }
+}

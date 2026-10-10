@@ -245,3 +245,46 @@ export const activity = {
   pages: 1,
   total: 3,
 };
+
+// ---------- Nutritionist workspace ----------
+const at = (h) => new Date(Date.now() + h * 3600e3).toISOString();
+const row = (id, name, area, status, time, day, state, clash = false) => ({ id, at: at(0), day, time, parent: { id: `p-${id}`, name, area, status }, state, clash });
+export const workspaceToday = {
+  date: 'Saturday, 10 October',
+  today: [
+    row('v1', 'Shahid Rana', 'Gulberg', 'normal', '12 pm', 'Sat 10 Oct', 'done'),
+    row('v2', 'Nasreen Chaudhry', 'Johar Town', 'watch', '3:30 pm', 'Sat 10 Oct', 'upcoming'),
+    row('v3', 'Parveen Sheikh', 'Model Town', 'watch', '5 pm', 'Sat 10 Oct', 'upcoming'),
+  ],
+  week: [
+    row('v4', 'Fatima Rahman', 'Model Town', 'watch', '11 am', 'Mon 12 Oct', 'upcoming'),
+    row('v5', 'Tariq Rahman', 'Model Town', 'attention', '12 pm', 'Mon 12 Oct', 'upcoming'),
+    row('v6', 'Kausar Raza', 'Model Town', 'normal', '3 pm', 'Thu 15 Oct', 'upcoming'),
+  ],
+  notLogged: [],
+  clashes: 0,
+  requests: [{ visitId: 'r1', parent: { id: 'p-z', name: 'Zubaida Khan' }, from: 'Fri 16 Oct, 3 pm', to: 'Saturday 17 October, 11:00 am' }],
+};
+export const workspaceInbox = {
+  needsReply: 2,
+  threads: [
+    { parentId: 'ammi', name: 'Fatima Rahman', family: 'Rahman family', from: 'Sana Rahman', last: 'Hina, Ammi says her ankles are swelling in the evenings again. Should we be worried?', time: 'Today', needsReply: true },
+    { parentId: 'abbu', name: 'Tariq Rahman', family: 'Rahman family', from: 'Sana Rahman', last: "He missed his B12 on Tuesday and today. I'll call him tonight.", time: 'Wed 7 Oct', needsReply: true },
+  ],
+};
+export const workspaceClient = (key = 'ammi') => ({
+  parent: { id: key, fullName: PROFILE[key].full, short: PARENTS[key].short, age: PARENTS[key].age, area: 'Model Town', overall: PARENTS[key].overall, overallTitle: PARENTS[key].overallTitle },
+  family: { id: 'rahman', name: 'Rahman family', contact: { name: 'Sana Rahman', email: 'sana.rahman@gmail.com', phone: '+447700900412', city: 'London' } },
+  lastVisit: 'Mon 28 Sep',
+  nextVisit: 'Mon 12 Oct, 11 am',
+  nextIn: 'In 2 days',
+  plan: { published: { weekOf: '5–11 October', createdLabel: 'Made by Hina on 28 Sep' }, hasDraft: false },
+});
+export const weekPlan = (key = 'ammi') => ({
+  weekOf: '12–18 October',
+  isDraft: false,
+  published: { weekOf: '5–11 October', createdLabel: 'Made by Hina on 28 Sep' },
+  days: WEEK[key].map((d) => [...d]),
+  links: {},
+  supplements: ['vitd', 'cal'],
+});

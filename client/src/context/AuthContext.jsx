@@ -5,7 +5,7 @@ import { useI18n } from '../i18n/index.js';
 
 const AuthContext = createContext(null);
 
-export const HOME_FOR_ROLE = { family: '/family', nutritionist: '/workspace', admin: '/admin', parent: '/parent' };
+export const HOME_FOR_ROLE = { family: '/family', nutritionist: '/workspace/today', admin: '/admin', parent: '/parent' };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

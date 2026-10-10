@@ -30,11 +30,14 @@ export const Messages = { ...parentArg, render: (a) => <S.Messages {...a} />, na
 export const SignInHelp = { render: () => <S.ParentSignInHelp />, name: 'Family / Help parent sign in' };
 export const ParentView = { ...parentArg, render: (a) => <S.ParentHome {...a} />, name: 'Parent / Simple view' };
 
+export const NutritionistToday = { render: () => <S.Today />, name: 'Nutritionist / Today' };
 export const Clients = { render: () => <S.Clients />, name: 'Nutritionist / Clients' };
+export const ClientRecord = { render: () => <S.ClientRecord />, name: 'Nutritionist / Client record' };
 export const VisitForm = { render: () => <S.VisitForm />, name: 'Nutritionist / Start visit' };
+export const VisitTypo = { render: () => <S.VisitForm typo />, name: 'Nutritionist / Visit – reading mistyped' };
 export const VisitSaved = { render: () => <S.VisitForm saved />, name: 'Nutritionist / Visit saved' };
+export const VisitAttention = { render: () => <S.VisitForm saved attention />, name: 'Nutritionist / Visit saved – needs attention' };
 export const PlanBuilder = { render: () => <S.PlanBuilder />, name: 'Nutritionist / Plan builder' };
-export const SendUpdate = { render: () => <S.SendUpdate />, name: 'Nutritionist / Send update' };
 
 export const AdminOverview = { render: () => <S.AdminOverview />, name: 'Admin / Overview' };
 export const AdminTeam = { render: () => <S.AdminTeam />, name: 'Admin / Nutritionists' };

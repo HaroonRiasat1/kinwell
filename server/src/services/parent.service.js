@@ -159,7 +159,7 @@ export async function getOrCreateTodayLog(parent) {
     Supplement.find({ parent: parent.id, active: true }).sort('code'),
     MealPlan.findOne({ parent: parent.id, status: 'published' }).sort('-createdAt'),
   ]);
-  const dayCodes = plan?.days?.[weekdayIndex()]?.slice(0, 3) ?? [];
+  const dayCodes = (plan?.days?.[weekdayIndex()]?.slice(0, 3) ?? []).filter(Boolean);
   const dishes = await Dish.find({ code: { $in: dayCodes } });
   const byCode = Object.fromEntries(dishes.map((d) => [d.code, d]));
 
@@ -271,7 +271,7 @@ export async function getNutrition(parent) {
     markersFor(parent.id),
   ]);
   if (!plan) return { plan: null, favor: parent.favor, limit: parent.limit, diet: parent.diet, markers: [] };
-  const codes = [...new Set(plan.days.flat())];
+  const codes = [...new Set(plan.days.flat().filter(Boolean))];
   const dishes = await Dish.find({ code: { $in: codes } });
   const byCode = Object.fromEntries(dishes.map((d) => [d.code, d]));
   return {
@@ -280,10 +280,12 @@ export async function getNutrition(parent) {
       weekOf: plan.weekOf,
       createdLabel: plan.createdLabel,
       days: plan.days.map((codesForDay) =>
-        codesForDay.map((code, j) => {
-          const d = byCode[code];
-          return { code, slot: MEAL_SLOTS[j], time: MEAL_TIMES[j], name: d?.name, nut: d?.nut ?? [], why: d?.why, link: d?.link };
-        }),
+        codesForDay
+          .map((code, j) => {
+            const d = byCode[code];
+            return code && { code, slot: MEAL_SLOTS[j], time: MEAL_TIMES[j], name: d?.name ?? code, nut: d?.nut ?? [], why: d?.why, link: d?.link };
+          })
+          .filter(Boolean),
       ),
     },
     favor: parent.favor,

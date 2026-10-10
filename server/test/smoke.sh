@@ -22,3 +22,9 @@ echo "-- family makes a parent sign-in code, parent signs in with it (spaces in 
 FC=$(curl -s -XPOST $B/parents/$P/sign-in-code -H "$H" | j 'd["code"]')
 post /auth/parent-code/verify "{\"phone\":\"+92 300 111 2233\",\"code\":\"$FC\"}" | head -c 60; echo
 echo "-- same code twice is rejected"; post /auth/parent-code/verify "{\"phone\":\"0300 1112233\",\"code\":\"$FC\"}"; echo
+echo "-- nutritionist: empty visit refused, typo refused, high readings graded"
+NP=$(curl -s $B/workspace/clients -H "Authorization: Bearer $NT" | j '[c["id"] for c in d if "Ammi" in c["name"]][0]')
+post /workspace/clients/$NP/visits '{}' "Authorization: Bearer $NT"; echo
+post /workspace/clients/$NP/visits '{"vitals":[{"label":"Blood pressure","value":"1650/100"}]}' "Authorization: Bearer $NT"; echo
+post /workspace/clients/$NP/visits '{"vitals":[{"label":"Blood pressure","value":"165/100"},{"label":"Fasting sugar","value":"186"}]}' "Authorization: Bearer $NT" | j '[(r["label"], r["status"]) for r in d["readings"]]'
+echo "-- nutritionist: today, inbox"; curl -s $B/workspace/today -H "Authorization: Bearer $NT" | j '(len(d["today"]), d["clashes"])'; curl -s $B/workspace/inbox -H "Authorization: Bearer $NT" | j 'd["needsReply"]'

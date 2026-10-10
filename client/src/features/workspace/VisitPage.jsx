@@ -1,29 +1,44 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { OBS, TESTS, VITALS_IN } from '@kinwell/shared';
-import { Button, Card, ChipGroup, Field, Icon, Kicker, SkeletonCard } from '../../components/ui/index.js';
+import { Button, Card, ChipGroup, Field, Icon, Kicker, SkeletonCard, StatusTag } from '../../components/ui/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { workspaceApi } from '../../api/endpoints.js';
-import { useWorkspace } from './WorkspaceLayout.jsx';
+import { ClientPicker, useHeader, useWorkspace } from './WorkspaceLayout.jsx';
 
 const MOODS = ['Good', 'Okay', 'Low'];
 
 /** Tablet-friendly home-visit form: big fields, tap-to-select chips. */
-export function VisitFormView({ parent, lastMeasurements, form, setForm, onSave, saving, saved, onNext }) {
+export function VisitFormView({ parent, lastMeasurements, form, setForm, onSave, saving, saved, result, errors = {}, onNext }) {
   const lastFor = (label) => lastMeasurements.find((m) => m.n.toLowerCase().startsWith(label.toLowerCase()))?.v;
   const setVital = (label, value) => setForm((f) => ({ ...f, vitals: { ...f.vitals, [label]: value } }));
   if (saved) {
+    const urgent = result?.readings.filter((r) => r.status === 'attention') ?? [];
     return (
-      <Card pad={32} style={{ maxWidth: 640 }}>
-        <span className="kw-icon-tile" style={{ background: 'var(--kw-normal-bg)', color: 'var(--kw-normal)' }}>
-          <Icon name="checkCircle" size={26} />
+      <Card pad={32} style={{ maxWidth: 720 }}>
+        <span className="kw-icon-tile" style={urgent.length ? { background: 'var(--kw-attention-bg)', color: 'var(--kw-attention)' } : { background: 'var(--kw-normal-bg)', color: 'var(--kw-normal)' }}>
+          <Icon name={urgent.length ? 'alert' : 'checkCircle'} size={26} />
         </span>
-        <h2 style={{ fontSize: 28, fontWeight: 800 }}>Visit saved</h2>
-        <p className="muted">{parent.short}'s family can now see today's measurements. Next, update the plan or send them a note.</p>
+        <h2 style={{ fontSize: 28, fontWeight: 800 }}>{urgent.length ? 'Visit saved: some readings need attention' : 'Visit saved'}</h2>
+        {result?.readings.length > 0 && (
+          <div className="row" style={{ '--gap': '8px' }}>
+            {result.readings.map((r) => (
+              <StatusTag key={r.label} status={r.status} label={`${r.label} ${r.value} ${r.unit}`} />
+            ))}
+          </div>
+        )}
+        <p className="muted">
+          {urgent.length
+            ? `${parent.short}'s family can see these readings and has an alert. The Kinwell team has been flagged too. Follow up with the family today, and refer to a doctor if needed.`
+            : `${parent.short}'s family can now see the visit summary in their messages.`}
+        </p>
         <div className="row">
-          <Button onClick={() => onNext('builder')}>Open plan builder</Button>
-          <Button variant="glass" onClick={() => onNext('update')}>
-            Send update to the family
+          {urgent.length > 0 && <Button onClick={() => onNext('messages')}>Message the family</Button>}
+          <Button variant={urgent.length ? 'glass' : 'primary'} onClick={() => onNext('plan')}>
+            Update the meal plan
+          </Button>
+          <Button variant="glass" onClick={() => onNext('client')}>
+            Back to {parent.short}
           </Button>
         </div>
       </Card>
@@ -47,7 +62,8 @@ export function VisitFormView({ parent, lastMeasurements, form, setForm, onSave,
               label={`${v.label} (${v.unit})`}
               inputMode="decimal"
               placeholder={v.ph}
-              hint={lastFor(v.label) ? `Last time: ${lastFor(v.label)}` : `Last time: ${v.last} ${v.unit}`}
+              hint={lastFor(v.label) ? `Last time: ${lastFor(v.label)}` : 'No earlier reading'}
+              error={errors[v.label]}
               value={form.vitals[v.label] ?? ''}
               onChange={(e) => setVital(v.label, e.target.value)}
               style={{ minHeight: 64, fontSize: 24 }}
@@ -88,38 +104,45 @@ export function VisitFormView({ parent, lastMeasurements, form, setForm, onSave,
   );
 }
 
-export const emptyVisitForm = () => ({ vitals: {}, observations: ['Good appetite', 'A bit tired'], mood: 'Good', notes: '', tests: ['HbA1c'] });
+export const emptyVisitForm = () => ({ vitals: {}, observations: [], mood: 'Good', notes: '', tests: [] });
 
 export default function VisitPage() {
   const { parentId } = useParams();
   const navigate = useNavigate();
-  const { setHeader, setCurrentId } = useWorkspace();
+  const { clients } = useWorkspace();
   const ctx = useApi(() => workspaceApi.visitContext(parentId), [parentId]);
   const [form, setForm] = useState(emptyVisitForm);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    setCurrentId(parentId);
-    setSaved(false);
+    setResult(null);
+    setErrors({});
+    setError(null);
     setForm(emptyVisitForm());
-  }, [parentId, setCurrentId]);
-  useEffect(() => {
-    const p = ctx.data?.parent;
-    if (p) setHeader({ title: `Home visit · ${p.short}`, sub: `${p.fullName}, ${p.age} · ${p.area} · started ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` });
-  }, [ctx.data, setHeader]);
+  }, [parentId]);
+  const p = ctx.data?.parent;
+  useHeader(
+    p ? `Home visit · ${p.short}` : 'Home visit',
+    p ? `${p.fullName}, ${p.age} · ${p.area}` : '',
+    <ClientPicker clients={clients.data} value={parentId} base="/workspace/visit" />,
+    [p?.id, clients.data],
+  );
 
   if (!ctx.data) return <SkeletonCard minHeight={480} />;
   const save = async () => {
     setSaving(true);
     setError(null);
+    setErrors({});
     try {
       const vitals = VITALS_IN.map((v) => ({ label: v.label, value: form.vitals[v.label] ?? '', unit: v.unit }));
-      await workspaceApi.logVisit(parentId, { ...form, vitals });
-      setSaved(true);
+      setResult(await workspaceApi.logVisit(parentId, { ...form, vitals }));
+      window.scrollTo({ top: 0 });
     } catch (err) {
       setError(err.message);
+      setErrors(err.details ?? {});
     } finally {
       setSaving(false);
     }
@@ -127,7 +150,7 @@ export default function VisitPage() {
   return (
     <>
       {error && (
-        <p role="alert" className="kw-field__error">
+        <p role="alert" className="kw-notice kw-notice--attention" style={{ color: 'var(--kw-attention)', fontWeight: 700 }}>
           {error}
         </p>
       )}
@@ -138,8 +161,10 @@ export default function VisitPage() {
         setForm={setForm}
         onSave={save}
         saving={saving}
-        saved={saved}
-        onNext={(where) => navigate(`/workspace/${where}/${parentId}`)}
+        saved={Boolean(result)}
+        result={result}
+        errors={errors}
+        onNext={(where) => navigate(where === 'client' ? `/workspace/clients/${parentId}` : `/workspace/${where}/${parentId}`)}
       />
     </>
   );

@@ -10,7 +10,8 @@ const mealPlanSchema = new mongoose.Schema(
     days: [[String]],
     links: { type: Map, of: String }, // builder: slot → lab marker
     supplements: [String],
-    status: { type: String, enum: ['draft', 'published'], default: 'published' },
+    status: { type: String, enum: ['draft', 'published', 'archived'], default: 'published' },
+    publishedAt: Date,
   },
   { timestamps: true },
 );

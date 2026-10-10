@@ -14,10 +14,12 @@ import DocumentsPage from './features/family/DocumentsPage.jsx';
 import MessagesPage from './features/family/MessagesPage.jsx';
 import ParentHomePage from './features/parent/ParentHomePage.jsx';
 import { WorkspaceLayout } from './features/workspace/WorkspaceLayout.jsx';
+import TodayPage from './features/workspace/TodayPage.jsx';
 import ClientsPage from './features/workspace/ClientsPage.jsx';
+import ClientPage from './features/workspace/ClientPage.jsx';
 import VisitPage from './features/workspace/VisitPage.jsx';
 import PlanBuilderPage from './features/workspace/PlanBuilderPage.jsx';
-import SendUpdatePage from './features/workspace/SendUpdatePage.jsx';
+import WorkspaceMessagesPage from './features/workspace/WorkspaceMessagesPage.jsx';
 import { AdminLayout } from './features/admin/AdminLayout.jsx';
 import AdminOverviewPage from './features/admin/AdminOverviewPage.jsx';
 import FamiliesPage from './features/admin/FamiliesPage.jsx';
@@ -77,11 +79,14 @@ export default function App() {
       <Route path="/parent" element={<RequireRole roles={['parent']}><ParentHomePage /></RequireRole>} />
 
       <Route path="/workspace" element={<RequireRole roles={['nutritionist']}><WorkspaceLayout /></RequireRole>}>
-        <Route index element={<Navigate to="clients" replace />} />
+        <Route index element={<Navigate to="today" replace />} />
+        <Route path="today" element={<TodayPage />} />
         <Route path="clients" element={<ClientsPage />} />
+        <Route path="clients/:id" element={<ClientPage />} />
         <Route path="visit/:parentId" element={<VisitPage />} />
-        <Route path="builder/:parentId" element={<PlanBuilderPage />} />
-        <Route path="update/:parentId" element={<SendUpdatePage />} />
+        <Route path="plan/:parentId" element={<PlanBuilderPage />} />
+        <Route path="messages" element={<WorkspaceMessagesPage />} />
+        <Route path="messages/:parentId" element={<WorkspaceMessagesPage />} />
       </Route>
 
       <Route path="/admin" element={<RequireRole roles={['admin']}><AdminLayout /></RequireRole>}>

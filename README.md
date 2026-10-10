@@ -139,12 +139,19 @@ All routes are under `/api`. Everything except sign-in, onboarding and `/health`
 | --- | --- |
 | Auth | `POST /auth/login`, `/auth/parent-code`, `/auth/parent-code/verify`, `/auth/forgot`, `/auth/logout` (`everywhere` signs out all devices), `GET /auth/me` |
 | Parents (family, the parent, their nutritionist, admins) | `GET /parents`, `/parents/threads`, `/parents/:id/{dashboard,home,profile,labs,nutrition,supplements,visits,documents,messages}`; `PATCH /parents/:id/checklist/:code`, `/parents/:id/supplements/reminders`; `POST /parents/:id/{labs/reports,visits/reschedule,messages}` |
-| Nutritionist | `GET /workspace/clients`, `/workspace/library`, `/workspace/clients/:id/visit`; `POST /workspace/clients/:id/visits`, `/workspace/clients/:id/updates`; `PUT /workspace/clients/:id/plan` |
+| Nutritionist | `GET /workspace/today`, `/workspace/inbox`, `/workspace/clients`, `/workspace/clients/:id`; `POST /workspace/clients/:id/visits` (readings validated and graded); `GET`/`PUT /workspace/clients/:id/plan`, `POST …/plan/publish`; `POST /workspace/requests/:visitId` (accept or decline a reschedule) |
 | Admin | Overview; flags (`resolve`, `reopen`, `notes`, `remind`); families (search, detail, change nutritionist, invite links); nutritionists (list, detail, create, update, leave); accounts (reset password, sign out everywhere, parent code, turn on/off); queues (unreadable lab reports, access requests); service areas; activity log |
 | Invites | `GET /auth/invites/:token`, `POST /auth/invites/accept` (the `/join/:token` page) |
 | Onboarding | `GET /onboarding/nutritionists`, `POST /onboarding` |
 
 `server/test/smoke.sh` exercises the main routes against a running, seeded API.
+
+## Visit readings
+
+Readings entered at a home visit are checked for typos and graded normal / watch / needs attention
+(`server/src/services/vitals.js`). Anything that needs attention updates the parent's vitals and status,
+adds an alert for the family, and flags the Kinwell team. The ranges are general adult guidance;
+have a clinician review them before real use.
 
 ## Not built yet
 

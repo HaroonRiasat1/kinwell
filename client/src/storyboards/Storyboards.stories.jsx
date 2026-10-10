@@ -61,11 +61,11 @@ export const NutritionistVisit = {
       persona="Hina Qureshi, registered dietitian, 18 clients across Model Town and Gulberg. Works on a tablet."
       goal="Record the visit, adjust the plan, and update the family before the next appointment."
       frames={[
-        { title: 'Pick today’s client', caption: 'Filter by status; clients who need attention are easy to find.', screen: <S.Clients /> },
-        { title: 'Record vitals and observations', caption: 'Large fields with last visit’s values for comparison; chips instead of typing.', screen: <S.VisitForm /> },
-        { title: 'Visit saved', caption: 'The family sees the measurements straight away.', screen: <S.VisitForm saved /> },
-        { title: 'Build next week’s plan', caption: 'Drag meals and supplements in; link each to a lab result.', screen: <S.PlanBuilder /> },
-        { title: 'Send a plain-language update', caption: 'A live preview shows exactly what Sana and Bilal will read.', screen: <S.SendUpdate /> },
+        { title: 'Start the day', caption: 'Today’s visits, anything without notes, a request to move a visit, and families waiting for a reply.', screen: <S.Today /> },
+        { title: 'Open the client', caption: 'Status, alerts, vitals and visit history in one place, with every action to hand.', screen: <S.ClientRecord /> },
+        { title: 'Record the visit', caption: 'Large fields with last visit’s values; a mistyped reading is caught before saving.', screen: <S.VisitForm typo /> },
+        { title: 'High readings are flagged', caption: 'The family gets an alert and a summary card; the Kinwell team is flagged.', screen: <S.VisitForm saved attention /> },
+        { title: 'Plan next week and publish', caption: 'Seven days, each meal linked to a result. Published plans reach the family and their daily list.', screen: <S.PlanBuilder /> },
       ]}
     />
   ),

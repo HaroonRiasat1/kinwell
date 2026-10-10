@@ -35,13 +35,19 @@ export const parentApi = {
 };
 
 export const workspaceApi = {
+  today: () => api.get('/workspace/today'),
+  decideReschedule: (visitId, decision) => api.post(`/workspace/requests/${visitId}`, { decision }),
+  inbox: () => api.get('/workspace/inbox'),
   clients: () => api.get('/workspace/clients'),
+  client: (id) => api.get(`/workspace/clients/${id}`),
   library: () => api.get('/workspace/library'),
   notifications: () => api.get('/workspace/notifications'),
   readNotification: (id) => api.post(`/workspace/notifications/${id}/read`),
   visitContext: (id) => api.get(`/workspace/clients/${id}/visit`),
   logVisit: (id, body) => api.post(`/workspace/clients/${id}/visits`, body),
+  plan: (id) => api.get(`/workspace/clients/${id}/plan`),
   savePlan: (id, body) => api.put(`/workspace/clients/${id}/plan`, body),
+  publishPlan: (id) => api.post(`/workspace/clients/${id}/plan/publish`),
   sendUpdate: (id, text) => api.post(`/workspace/clients/${id}/updates`, { text }),
 };
 
