@@ -1,6 +1,7 @@
 // Seeds MongoDB with the Rahman family and the rest of the demo data from the Kinwell design.
 // Run with: npm run seed   (drops the existing kinwell database first)
 import { pathToFileURL } from 'node:url';
+import ur from '@kinwell/shared/i18n/ur.js';
 import mongoose from 'mongoose';
 import {
   BAND,
@@ -143,9 +144,11 @@ async function seedRahmanFamily(hina) {
       favor: FAVOR[key].favor,
       limit: FAVOR[key].limit,
       interactions: INTERACT[key],
+      i18n: { ur: { note: ur.notes[key], short: ur.names[key] } },
     });
 
-    await makeUser({ name: pr.full, phone: phones[key], role: 'parent', city: 'Lahore', family: family.id, parent: parent.id });
+    // Ammi and Abbu read the app in Urdu.
+    await makeUser({ name: pr.full, phone: phones[key], role: 'parent', city: 'Lahore', language: 'ur', family: family.id, parent: parent.id });
 
     await LabMarker.insertMany(
       P.markers.map((m, order) => ({
@@ -172,7 +175,7 @@ async function seedRahmanFamily(hina) {
     await Supplement.insertMany(
       supps.map((i) => {
         const { week, ...x } = SUPPX[key][i.id]; // eslint-disable-line no-unused-vars
-        return { parent: parent.id, code: i.id, title: i.title, simple: i.simple, dose: i.dose, time: i.time, ...x };
+        return { parent: parent.id, code: i.id, title: i.title, simple: i.simple, dose: i.dose, time: i.time, ...x, i18n: { ur: ur.supplements[key][i.id] } };
       }),
     );
     await MealPlan.create({ parent: parent.id, weekOf: '5–11 October', createdBy: hina.id, createdLabel: 'Made by Hina on 28 Sep', days: WEEK[key] });
@@ -184,16 +187,18 @@ async function seedRahmanFamily(hina) {
       if (v !== null && v !== undefined) return v === 1;
       return d === 4 ? P.items.find((i) => i.id === code).done : true;
     };
+    const dishOf = (title) => Object.entries(DISHES).find(([, d]) => d.n === title)?.[0];
+    const logItem = (i, done) => ({ code: i.id, dish: i.kind === 'meal' ? dishOf(i.title) : undefined, kind: i.kind, title: i.title, simple: i.simple, dose: i.dose, time: i.time, done });
     const keys = weekDateKeys();
     const logs = keys.slice(0, today).map((date, d) => ({
       parent: parent.id,
       date,
-      items: P.items.map((i) => ({ code: i.id, kind: i.kind, title: i.title, simple: i.simple, dose: i.dose, time: i.time, done: i.kind === 'supp' ? history(i.id, d) : true })),
+      items: P.items.map((i) => logItem(i, i.kind === 'supp' ? history(i.id, d) : true)),
     }));
     logs.push({
       parent: parent.id,
       date: todayKey(),
-      items: P.items.map((i) => ({ code: i.id, kind: i.kind, title: i.title, simple: i.simple, dose: i.dose, time: i.time, done: i.done })),
+      items: P.items.map((i) => logItem(i, i.done)),
     });
     await DailyLog.insertMany(logs);
 
@@ -319,7 +324,7 @@ async function seedOps() {
     { name: 'Johar Town', activeClients: 49, capacity: 60 },
     { name: 'Cantt', activeClients: 33, capacity: 40 },
   ]);
-  await Dish.insertMany(Object.entries(DISHES).map(([code, d]) => ({ code, name: d.n, nut: d.nut, why: d.why, link: d.link })));
+  await Dish.insertMany(Object.entries(DISHES).map(([code, d]) => ({ code, name: d.n, nut: d.nut, why: d.why, link: d.link, i18n: { ur: ur.dishes[code] } })));
 }
 
 export async function seed() {

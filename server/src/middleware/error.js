@@ -11,6 +11,6 @@ export const errorHandler = (err, _req, res, _next) => {
   if (err instanceof mongoose.Error.ValidationError) { status = 400; }
   if (status >= 500) console.error(err);
   res.status(status).json({
-    error: { message: status >= 500 && !(err instanceof ApiError) ? 'Something went wrong on our side' : message, details: err.details },
+    error: { message: status >= 500 && !(err instanceof ApiError) ? 'Something went wrong on our side' : message, details: err.details, code: err.code },
   });
 };

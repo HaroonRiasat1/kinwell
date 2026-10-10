@@ -14,5 +14,6 @@ router.post('/parent-code/verify', validate(s.parentCodeVerifySchema), c.verifyP
 router.post('/forgot', validate(s.forgotSchema), c.forgot);
 router.post('/logout', requireAuth, validate(s.logoutSchema), c.logout);
 router.get('/me', requireAuth, c.me);
+router.patch('/me/language', requireAuth, validate(s.languageSchema), c.setLanguage);
 
 export default router;

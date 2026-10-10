@@ -6,3 +6,4 @@ export const verifyParentCode = async (req, res) => res.json(await auth.verifyPa
 export const forgot = async (req, res) => res.json(await auth.requestPasswordReset(req.body));
 export const logout = async (req, res) => res.json(await auth.logout(req.user, req.body));
 export const me = async (req, res) => res.json({ user: req.user.toPublic() });
+export const setLanguage = async (req, res) => res.json(await auth.setLanguage(req.user, req.body));

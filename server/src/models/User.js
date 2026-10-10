@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema(
     role: { type: String, enum: ['family', 'nutritionist', 'admin', 'parent'], required: true },
     city: String,
     timezone: String,
+    language: { type: String, default: 'en' }, // UI language, e.g. 'ur'
     family: { type: mongoose.Schema.Types.ObjectId, ref: 'Family' },
     parent: { type: mongoose.Schema.Types.ObjectId, ref: 'Parent' }, // set for role=parent
     nutritionist: nutritionistProfileSchema,
@@ -47,6 +48,7 @@ userSchema.methods.toPublic = function toPublic() {
     email: this.email,
     role: this.role,
     city: this.city,
+    language: this.language,
     family: this.family,
     parent: this.parent,
     nutritionist: this.nutritionist,

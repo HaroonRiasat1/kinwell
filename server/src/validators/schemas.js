@@ -10,6 +10,7 @@ export const parentCodeVerifySchema = z.object({
   code: z.string().regex(/^\d{6}$/, 'The code has 6 digits'),
 });
 export const forgotSchema = z.object({ email });
+export const languageSchema = z.object({ language: z.enum(['en', 'ur']) });
 export const logoutSchema = z.object({ everywhere: z.boolean().default(false) });
 
 export const checklistSchema = z.object({ done: z.boolean() });

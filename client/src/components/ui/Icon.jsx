@@ -45,6 +45,7 @@ export function Icon({ name, size = 18, strokeWidth = 2, label, ...rest }) {
       aria-hidden={label ? undefined : true}
       role={label ? 'img' : undefined}
       aria-label={label}
+      className={name === 'arrowRight' || name === 'arrowLeft' ? 'kw-icon--directional' : undefined}
       {...rest}
     >
       {PATHS[name]}

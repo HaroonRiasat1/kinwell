@@ -4,6 +4,7 @@ import { BrandMark } from '../../components/layout/index.js';
 import { Button, Card, Checkbox, Field, Icon, Segmented } from '../../components/ui/index.js';
 import { authApi } from '../../api/endpoints.js';
 import { HOME_FOR_ROLE, useOptionalAuth } from '../../context/AuthContext.jsx';
+import { LanguageSwitcher, errorText, useI18n } from '../../i18n/index.js';
 
 const ROLES = [
   { value: 'family', label: 'Family member', hint: 'See updates about your parents.' },
@@ -17,9 +18,10 @@ const ROLES = [
  */
 export function CodeBoxes({ value, onChange, autoFocus = true }) {
   const [focused, setFocused] = useState(false);
+  const { t } = useI18n();
   return (
-    <label style={{ position: 'relative', display: 'block', maxWidth: 380 }}>
-      <span className="sr-only">6-digit code</span>
+    <label className="kw-ltr" style={{ position: 'relative', display: 'block', maxWidth: 380 }}>
+      <span className="sr-only">{t('parentSignIn.codeLabel')}</span>
       <input
         className="kw-codeinput"
         inputMode="numeric"
@@ -44,6 +46,7 @@ export function CodeBoxes({ value, onChange, autoFocus = true }) {
 }
 
 function SignInForm({ role, onRole, onSubmit, busy, error, onForgot, onCode }) {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
@@ -82,7 +85,7 @@ function SignInForm({ role, onRole, onSubmit, busy, error, onForgot, onCode }) {
         {busy ? 'Signing in…' : 'Sign in'}
       </Button>
       <Button variant="glass" block icon="phone" onClick={onCode}>
-        I'm a parent: sign in with my phone number
+        {t('parentSignIn.entry')}
       </Button>
       <p className="text-sm muted" style={{ textAlign: 'center' }}>
         New to Kinwell? <Link to="/onboarding">Set up your family</Link>
@@ -92,6 +95,7 @@ function SignInForm({ role, onRole, onSubmit, busy, error, onForgot, onCode }) {
 }
 
 function ParentCodeForm({ initialPhone = '', onDone, onBack }) {
+  const { t } = useI18n();
   const [phone, setPhone] = useState(initialPhone);
   const [code, setCode] = useState('');
   // When we arrive from a family member's link, the phone is known and the code is in hand.
@@ -104,7 +108,7 @@ function ParentCodeForm({ initialPhone = '', onDone, onBack }) {
     try {
       await fn();
     } catch (err) {
-      setError(err.message);
+      setError(errorText(t, err));
     } finally {
       setBusy(false);
     }
@@ -122,35 +126,36 @@ function ParentCodeForm({ initialPhone = '', onDone, onBack }) {
         submit();
       }}
     >
-      <h2 style={{ fontSize: 30, fontWeight: 800 }}>{step ? 'Enter your code' : 'Sign in with your phone'}</h2>
-      {!step && <p className="muted">Type your mobile number. No password needed.</p>}
+      <LanguageSwitcher />
+      <h2 style={{ fontSize: 30, fontWeight: 800 }}>{step ? t('parentSignIn.enterCode') : t('parentSignIn.title')}</h2>
+      {!step && <p className="muted">{t('parentSignIn.intro')}</p>}
       {!step && (
-        <Field label="Your mobile number" type="tel" autoComplete="tel" inputMode="tel" placeholder="0300 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ fontSize: 22, minHeight: 60 }} />
+        <Field label={t('parentSignIn.phoneLabel')} dir="ltr" type="tel" autoComplete="tel" inputMode="tel" placeholder="0300 1234567" value={phone} onChange={(e) => setPhone(e.target.value)} required style={{ fontSize: 22, minHeight: 60 }} />
       )}
-      {step?.delivery === 'sms' && <p className="muted">We've sent a 6-digit code by text message to {phone}.</p>}
+      {step?.delivery === 'sms' && <p className="muted">{t('parentSignIn.smsSent', { phone })}</p>}
       {step?.delivery === 'family' && (
         <div className="kw-notice kw-notice--normal" style={{ fontSize: 18 }}>
-          <strong>{step.fromLink ? 'Type the code your family sent you.' : 'Ask your son or daughter for your code.'}</strong>
-          {!step.fromLink && <span>They can make one in their Kinwell app, on your profile, under “Help with sign in”. They can send it to you on WhatsApp.</span>}
+          <strong>{step.fromLink ? t('parentSignIn.fromLink') : t('parentSignIn.askFamily')}</strong>
+          {!step.fromLink && <span>{t('parentSignIn.askFamilyHow')}</span>}
         </div>
       )}
       {step && <CodeBoxes value={code} onChange={setCode} />}
-      {step?.devCode && <p className="kw-field__hint">Development mode: the code is {step.devCode}.</p>}
+      {step?.devCode && <p className="kw-field__hint">{t('parentSignIn.devCode', { code: step.devCode })}</p>}
       {error && (
         <p role="alert" className="kw-field__error">
           {error}
         </p>
       )}
       <Button type="submit" size="lg" block disabled={busy || (step && code.length < 6)}>
-        {busy ? 'Please wait…' : step ? 'Sign in' : 'Continue'}
+        {busy ? t('common.pleaseWait') : step ? t('common.signIn') : t('parentSignIn.continue')}
       </Button>
       {step && !step.fromLink && (
         <Button variant="link" onClick={() => (setStep(null), setCode(''))}>
-          Use a different number
+          {t('parentSignIn.otherNumber')}
         </Button>
       )}
       <Button variant="link" onClick={onBack}>
-        Back to email sign in
+        {t('parentSignIn.backToEmail')}
       </Button>
     </form>
   );

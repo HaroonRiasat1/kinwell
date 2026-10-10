@@ -16,6 +16,7 @@ const supplementSchema = new mongoose.Schema(
     review: String,
     reminderOn: { type: Boolean, default: true },
     active: { type: Boolean, default: true },
+    i18n: { type: Map, of: Object }, // per-language overrides, e.g. { ur: { simple, dose, time } }
   },
   { timestamps: true },
 );

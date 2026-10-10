@@ -1,6 +1,6 @@
 // Kinwell shows dates the way families say them: "Friday, 9 October".
-export const longDate = (d = new Date()) =>
-  new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
+export const longDate = (d = new Date(), locale = 'en-GB') =>
+  new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
 
 export function todayGreeting(d = new Date()) {
   const h = d.getHours();

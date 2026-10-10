@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { authApi } from '../api/endpoints.js';
 import { setUnauthorizedHandler, tokenStore } from '../api/client.js';
+import { useI18n } from '../i18n/index.js';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,12 @@ export const HOME_FOR_ROLE = { family: '/family', nutritionist: '/workspace', ad
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
+  const { setLanguage } = useI18n();
+
+  // Parents see the app in the language saved on their account (e.g. Urdu).
+  useEffect(() => {
+    if (user?.role === 'parent' && user.language) setLanguage(user.language);
+  }, [user, setLanguage]);
 
   const clear = useCallback(() => {
     tokenStore.set(null);

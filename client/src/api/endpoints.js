@@ -8,6 +8,7 @@ export const authApi = {
   forgot: (email) => api.post('/auth/forgot', { email }),
   logout: (everywhere) => api.post('/auth/logout', { everywhere }),
   me: () => api.get('/auth/me'),
+  setLanguage: (language) => api.patch('/auth/me/language', { language }),
 };
 
 const p = (id) => `/parents/${id}`;

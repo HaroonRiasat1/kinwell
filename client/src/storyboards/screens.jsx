@@ -26,6 +26,7 @@ import { AdminTable, FAMILY_COLUMNS, TEAM_COLUMNS } from '../features/admin/Admi
 import { initialOnboarding, OnboardingView } from '../features/onboarding/OnboardingPage.jsx';
 import { PageHeader } from '../components/layout/index.js';
 import { DEFAULT_UPD } from '@kinwell/shared';
+import { useI18n } from '../i18n/index.js';
 
 const noop = () => {};
 
@@ -136,7 +137,8 @@ export function Messages({ parentKey = 'ammi' }) {
 
 // ---------- Parent (simple view) ----------
 export function ParentHome({ parentKey = 'ammi', familyPreview = false }) {
-  const [data, setData] = useState(() => fx.home(parentKey));
+  const { lang } = useI18n();
+  const [data, setData] = useState(() => fx.home(parentKey, lang));
   const toggle = (it) => setData((d) => ({ ...d, checklist: d.checklist.map((i) => (i.code === it.code ? { ...i, done: !i.done } : i)) }));
   return <ParentHomeView data={data} onToggle={toggle} familyPreview={familyPreview} onBack={noop} onSignOut={noop} />;
 }

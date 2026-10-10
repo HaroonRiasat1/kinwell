@@ -25,6 +25,7 @@ import {
   VISITS,
   WEEK,
 } from '@kinwell/shared';
+import urContent from '@kinwell/shared/i18n/ur.js';
 
 const SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 const TIMES = ['8:00 am', '1:30 pm', '8:00 pm', '5:00 pm'];
@@ -136,7 +137,24 @@ export const threads = ['ammi', 'abbu'].map((key) => {
   return { parentId: key, key, name: `${PARENTS[key].short}'s care team`, last: last.text, time: last.t.split(' · ')[0] };
 });
 
-export const home = (key = 'ammi') => ({
+// Parent-facing content in Urdu, mirroring what the API returns with X-Language: ur.
+const URDU_LABELS = { Breakfast: 'ناشتہ', Lunch: 'دوپہر کا کھانا', Dinner: 'رات کا کھانا', London: 'لندن', Dubai: 'دبئی' };
+const urduHome = (key, h) => ({
+  ...h,
+  parent: { ...h.parent, short: urContent.names[key] },
+  checklist: h.checklist.map((i) => {
+    if (i.kind === 'supp') return { ...i, ...urContent.supplements[key][i.code] };
+    const dish = Object.entries(DISHES).find(([, d]) => d.n === i.title)?.[0];
+    return { ...i, simple: urContent.dishes[dish]?.name ?? i.simple, time: URDU_LABELS[i.time] ?? i.time };
+  }),
+  children: h.children.map((c) => ({ ...c, city: URDU_LABELS[c.city] ?? c.city })),
+  nextVisit: { ...h.nextVisit, date: 'پیر، 12 اکتوبر، صبح 11 بجے', nextIn: '2 دن میں' },
+  latestNote: { ...h.latestNote, text: urContent.notes[key], after: '28 ستمبر' },
+});
+
+export const home = (key = 'ammi', lang = 'en') => (lang === 'ur' ? urduHome(key, homeEn(key)) : homeEn(key));
+
+const homeEn = (key = 'ammi') => ({
   ...dashboard(key),
   children: [
     { id: 'sana', name: 'Sana', city: 'London', relation: 'Your daughter', phone: '+447700900412' },

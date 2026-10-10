@@ -3,7 +3,7 @@ import { Card } from './Card.jsx';
 import { Icon } from './Icon.jsx';
 
 /** Friendly error block: says whose fault it is, that data is safe, and what to do next. */
-export function ErrorState({ title, children, onRetry, secondary }) {
+export function ErrorState({ title, children, onRetry, secondary, retryLabel = 'Try again' }) {
   return (
     <Card role="alert" pad={32} style={{ maxWidth: 640 }}>
       <span className="kw-icon-tile kw-icon-tile--attention" style={{ '--size': '56px' }}>
@@ -14,7 +14,7 @@ export function ErrorState({ title, children, onRetry, secondary }) {
       <div className="row">
         {onRetry && (
           <Button size="lg" icon="refresh" onClick={onRetry}>
-            Try again
+            {retryLabel}
           </Button>
         )}
         {secondary}

@@ -55,12 +55,12 @@ export async function requestParentCode({ phone }) {
 export async function verifyParentCode({ phone, code }) {
   const user = await User.findOne({ phone: normalizePhone(phone), role: 'parent' }).select('+loginCode.hash');
   const lc = user?.loginCode;
-  if (!lc?.hash || lc.expiresAt <= new Date()) throw ApiError.unauthorized('That code has expired. Ask your family for a new one.');
-  if ((lc.attempts ?? 0) >= MAX_ATTEMPTS) throw ApiError.unauthorized('Too many wrong tries. Ask your family for a new code.');
+  if (!lc?.hash || lc.expiresAt <= new Date()) throw ApiError.unauthorized('That code has expired. Ask your family for a new one.', 'code_expired');
+  if ((lc.attempts ?? 0) >= MAX_ATTEMPTS) throw ApiError.unauthorized('Too many wrong tries. Ask your family for a new code.', 'code_locked');
   if (!(await bcrypt.compare(code, lc.hash))) {
     user.loginCode.attempts = (lc.attempts ?? 0) + 1;
     await user.save();
-    throw ApiError.unauthorized("That code didn't work. Check it and try again.");
+    throw ApiError.unauthorized("That code didn't work. Check it and try again.", 'code_wrong');
   }
   user.loginCode = undefined;
   await user.save();
@@ -71,6 +71,12 @@ export async function requestPasswordReset({ email }) {
   // Always succeed so the endpoint can't be used to discover accounts.
   await User.exists({ email });
   return { sent: true };
+}
+
+export async function setLanguage(user, { language }) {
+  user.language = language;
+  await user.save();
+  return { user: user.toPublic() };
 }
 
 export async function logout(user, { everywhere }) {

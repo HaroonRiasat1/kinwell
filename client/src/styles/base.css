@@ -163,3 +163,75 @@ ol {
     display: none !important;
   }
 }
+
+/* ===== Right-to-left languages (Urdu) ===== */
+[dir='rtl'] .kw-icon--directional {
+  transform: scaleX(-1);
+}
+/* Latin letters (brand, names, numbers) keep the app's own sans; Urdu letters use Nastaliq. */
+@font-face {
+  font-family: 'KW Latin';
+  src: local('Helvetica Neue'), local('HelveticaNeue'), local('Segoe UI'), local('Roboto'), local('Arial');
+  unicode-range: U+0000-024F, U+2000-206F, U+20AC;
+}
+@font-face {
+  font-family: 'KW Latin';
+  font-weight: 700 900;
+  src: local('Helvetica Neue Bold'), local('HelveticaNeue-Bold'), local('Segoe UI Bold'), local('Roboto Bold'), local('Arial Bold');
+  unicode-range: U+0000-024F, U+2000-206F, U+20AC;
+}
+:lang(ur) {
+  font-family: 'KW Latin', 'Noto Nastaliq Urdu', var(--kw-font);
+}
+/* Nastaliq is tall and joined: more line height, no negative tracking. */
+:lang(ur) body,
+:lang(ur) .kw-parent-view,
+:lang(ur) .kw-card,
+:lang(ur) .kw-modal__panel {
+  line-height: 2;
+}
+:lang(ur) h1,
+:lang(ur) h2,
+:lang(ur) h3 {
+  letter-spacing: 0;
+  line-height: 1.7;
+}
+:lang(ur) .kw-kicker {
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* Numbers and codes always read left to right. */
+.kw-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Language switcher */
+.kw-langswitch {
+  align-self: flex-start;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--kw-r-pill);
+  background: rgba(31, 42, 40, 0.06);
+}
+.kw-langswitch button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--kw-r-pill);
+  background: transparent;
+  color: var(--kw-ink-2);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kw-langswitch button[lang='ur'] {
+  font-family: 'Noto Nastaliq Urdu', var(--kw-font);
+  font-weight: 600;
+}
+.kw-langswitch button[aria-pressed='true'] {
+  background: #fff;
+  color: var(--kw-teal-800);
+  box-shadow: 0 2px 8px rgba(31, 42, 40, 0.1);
+}

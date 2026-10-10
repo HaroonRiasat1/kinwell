@@ -23,6 +23,7 @@ const parentSchema = new Schema(
     overallTitle: String,
     overallText: String,
     note: String,
+    i18n: { type: Map, of: Object }, // per-language versions of parent-facing text, e.g. { ur: { note } }
     changes: [{ _id: false, k: String, v: String }],
     lastVisit: String,
     nextVisit: String,

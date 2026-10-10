@@ -9,6 +9,7 @@ const dailyLogSchema = new mongoose.Schema(
       {
         _id: false,
         code: String,
+        dish: String, // dish code for meals, used to look up translations
         kind: { type: String, enum: ['supp', 'meal'] },
         title: String,
         simple: String,

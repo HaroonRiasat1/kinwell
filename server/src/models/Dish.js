@@ -6,6 +6,7 @@ const dishSchema = new mongoose.Schema({
   nut: [String],
   why: String,
   link: String,
+  i18n: { type: Map, of: Object }, // e.g. { ur: { name } }
 });
 
 export const Dish = mongoose.model('Dish', dishSchema);

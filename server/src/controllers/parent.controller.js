@@ -16,7 +16,7 @@ export const list = async (req, res) => res.json(await svc.listParentsForUser(re
 export const threads = async (req, res) => res.json(await svc.threadsForUser(req.user));
 
 export const dashboard = withParent((p) => svc.getDashboard(p));
-export const home = withParent((p) => svc.getParentHome(p));
+export const home = withParent((p, req) => svc.getParentHome(p, req.lang));
 export const profile = withParent((p) => svc.getProfile(p));
 export const labs = withParent((p) => svc.getLabs(p));
 export const nutrition = withParent((p) => svc.getNutrition(p));

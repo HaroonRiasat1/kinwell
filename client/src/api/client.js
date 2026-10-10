@@ -1,4 +1,5 @@
-// Thin fetch wrapper: JSON in/out, bearer token, and readable errors.
+// Thin fetch wrapper: JSON in/out, bearer token, language header, and readable errors.
+import { currentLanguage } from '../i18n/index.js';
 const TOKEN_KEY = 'kinwell.token';
 const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -21,10 +22,11 @@ export const tokenStore = {
 };
 
 export class ApiError extends Error {
-  constructor(status, message, details) {
+  constructor(status, message, details, code) {
     super(message);
     this.status = status;
     this.details = details;
+    this.code = code; // stable id the UI can translate, e.g. "code_expired"
   }
 }
 
@@ -34,7 +36,7 @@ export const setUnauthorizedHandler = (fn) => {
 };
 
 export async function request(path, { method = 'GET', body, signal } = {}) {
-  const headers = { Accept: 'application/json' };
+  const headers = { Accept: 'application/json', 'X-Language': currentLanguage() };
   const token = tokenStore.get();
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -44,12 +46,12 @@ export async function request(path, { method = 'GET', body, signal } = {}) {
     res = await fetch(`${BASE}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal });
   } catch (err) {
     if (err.name === 'AbortError') throw err;
-    throw new ApiError(0, "We couldn't reach Kinwell. Check your internet connection and try again.");
+    throw new ApiError(0, "We couldn't reach Kinwell. Check your internet connection and try again.", undefined, 'network');
   }
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     if (res.status === 401 && token) onUnauthorized();
-    throw new ApiError(res.status, data?.error?.message ?? 'Something went wrong', data?.error?.details);
+    throw new ApiError(res.status, data?.error?.message ?? 'Something went wrong', data?.error?.details, data?.error?.code);
   }
   return data;
 }

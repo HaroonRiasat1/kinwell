@@ -4,5 +4,9 @@
   "private": true,
   "type": "module",
   "main": "demo-data.js",
-  "exports": { ".": "./demo-data.js", "./demo-data.js": "./demo-data.js" }
+  "exports": {
+    ".": "./demo-data.js",
+    "./demo-data.js": "./demo-data.js",
+    "./i18n/*": "./i18n/*"
+  }
 }

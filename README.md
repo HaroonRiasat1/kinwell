@@ -58,6 +58,30 @@ In development the code is also shown on screen.
 To send codes by SMS instead, set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_FROM` in the
 server environment (Vercel → Settings → Environment Variables) and redeploy. Nothing else changes.
 
+## Languages
+
+Parents can use Kinwell in **English** or **Urdu** (right-to-left, Nastaliq font). Ammi and Abbu's
+demo accounts are set to Urdu; the switcher on their screen changes it and saves it to their account.
+Today the parent's screens are translated (sign-in, daily view, sign-out); family, nutritionist and
+admin screens are English.
+
+How it fits together:
+- **Interface text**: `client/src/i18n/locales/<lang>.js`, used through `useI18n().t('key', { vars })`.
+  Missing keys fall back to English.
+- **Content** (tablet names, meals, the nutritionist's note): stored on each document under
+  `i18n.<lang>`. The API returns it in the language sent in the `X-Language` header.
+- **Server labels** (dates, meal slots, cities): `server/src/i18n/`.
+
+To add a language, for example Punjabi (`pa`):
+1. Add it to `client/src/i18n/languages.js` (label, `dir`, locale, and a font if needed).
+2. Copy `client/src/i18n/locales/ur.js` to `pa.js`, translate it, and register it in `I18nProvider.jsx`.
+3. Add `'pa'` to `LANGUAGES` in `server/src/i18n/index.js` and to `languageSchema`, plus a
+   `labels.pa.js` if dates or labels need it.
+4. Add content translations to `shared/i18n/pa.js` (used by the seeder).
+5. Run `npm run i18n:check -w client` to catch missing keys or placeholders.
+
+The Urdu text was machine-assisted; have a native speaker review it before real use.
+
 ## Storybook: core UI and storyboards
 
 ```bash
@@ -70,6 +94,7 @@ Opens on http://localhost:6006 and needs no server or database.
 - **Components**: every core UI component with controls (Button, StatusTag, Card, Chip, Segmented,
   Field, Toggle, data viz, feedback states, modal…).
 - **Screens**: every screen and its states (loading, empty, error, upload failed, reschedule…).
+- Use the **Language** button in the toolbar to see any story in Urdu.
 - **Storyboards**: numbered frames walking through each journey: family check-in, rescheduling a
   visit, the parent's day, a nutritionist's home visit, the admin morning review, and onboarding.
   Frames are live components, so they stay in sync with the code.

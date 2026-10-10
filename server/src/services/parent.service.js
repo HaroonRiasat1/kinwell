@@ -27,6 +27,7 @@ import {
   weekdayIndex,
 } from '../utils/time.js';
 import { issueParentCode } from './auth.service.js';
+import { dayLabel, label, localized, relativeDaysLabel, visitDateTime } from '../i18n/index.js';
 
 const MEAL_SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 const MEAL_TIMES = ['8:00 am', '1:30 pm', '8:00 pm', '5:00 pm'];
@@ -72,6 +73,7 @@ export async function visitSummary(parent) {
     nextIn: next?.scheduledFor ? relativeDays(calendarDaysUntil(next.scheduledFor)) : null,
     nextVisitLong: next?.scheduledFor ? longVisitLabel(next.scheduledFor) : next ? parent.nextVisitLong : null,
     upcoming: next,
+    last,
   };
 }
 
@@ -164,6 +166,7 @@ export async function getOrCreateTodayLog(parent) {
     ...supps.map((s) => ({ code: s.code, kind: 'supp', title: s.title, simple: s.simple, dose: s.dose, time: s.time })),
     ...dayCodes.map((code, i) => ({
       code: `m${i + 1}`,
+      dish: code,
       kind: 'meal',
       title: byCode[code]?.name ?? code,
       simple: byCode[code]?.name ?? code,
@@ -419,22 +422,55 @@ export async function postMessage(parent, user, { text }) {
   return messageView(msg, user);
 }
 
-export async function getParentHome(parent) {
-  const [dash, family, visits, nutritionist] = await Promise.all([
+/**
+ * The parent's own screen, in their language: checklist wording, meal names,
+ * the nutritionist's note, visit date and city names are all localised.
+ */
+export async function getParentHome(parent, lang = 'en') {
+  const [dash, family, visits, nutritionist, supps] = await Promise.all([
     getDashboard(parent),
     Family.findById(parent.family).populate('members.user'),
     visitSummary(parent),
     User.findById(parent.nutritionist),
+    Supplement.find({ parent: parent.id }),
   ]);
+  const dishes = await Dish.find({ code: { $in: dash.checklist.map((i) => i.dish).filter(Boolean) } });
+  const suppBy = Object.fromEntries(supps.map((s) => [s.code, s]));
+  const dishBy = Object.fromEntries(dishes.map((d) => [d.code, d]));
+
+  const checklist = dash.checklist.map((item) => {
+    const it = item.toObject ? item.toObject() : { ...item };
+    if (it.kind === 'supp' && suppBy[it.code]) {
+      const s = suppBy[it.code];
+      return { ...it, simple: localized(s, 'simple', lang) ?? it.simple, dose: localized(s, 'dose', lang) ?? it.dose, time: localized(s, 'time', lang) ?? it.time };
+    }
+    const d = dishBy[it.dish];
+    return { ...it, simple: d ? localized(d, 'name', lang) : it.simple, time: label(it.time, lang) };
+  });
+
   const children = family.members
     .filter((m) => m.user && m.status === 'active')
-    .map((m) => ({ id: m.user.id, name: m.user.name.split(' ')[0], city: m.user.city, relation: m.relation, phone: m.user.phone ?? null }));
+    .map((m) => ({ id: m.user.id, name: m.user.name.split(' ')[0], city: label(m.user.city, lang), relation: m.relation, phone: m.user.phone ?? null }));
+
+  const next = visits.upcoming?.scheduledFor;
+  const note = localized(parent, 'note', lang);
   return {
     ...dash,
+    parent: { ...dash.parent, short: localized(parent, 'short', lang) },
+    checklist,
     children,
-    nextVisit: visits.upcoming && { date: visits.nextVisitLong, nextIn: visits.nextIn, plan: visits.upcoming.plan },
+    language: lang,
+    nextVisit: visits.upcoming && {
+      date: next ? visitDateTime(next, lang).full : visits.nextVisitLong,
+      nextIn: next ? relativeDaysLabel(calendarDaysUntil(next), lang) : visits.nextIn,
+      plan: visits.upcoming.plan,
+    },
     // The latest plain-language note from the nutritionist, so the parent can read it too.
-    latestNote: parent.note && { text: parent.note, from: nutritionist?.name ?? 'Your nutritionist', after: visits.lastVisit },
+    latestNote: note && {
+      text: note,
+      from: nutritionist?.name ?? 'Your nutritionist',
+      after: visits.last?.scheduledFor ? dayLabel(visits.last.scheduledFor, lang) : visits.lastVisit,
+    },
   };
 }
 
