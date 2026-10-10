@@ -14,3 +14,5 @@ export { TrendChart } from './TrendChart.jsx';
 export { Modal } from './Modal.jsx';
 export { CheckRow } from './CheckRow.jsx';
 export { ErrorState, EmptyState } from './StateViews.jsx';
+export { ToastProvider, useToast } from './Toast.jsx';
+export { ConfirmDialog } from './ConfirmDialog.jsx';

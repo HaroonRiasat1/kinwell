@@ -1,6 +1,7 @@
 import { Family, Parent, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { signToken } from '../middleware/auth.js';
+import { newInviteToken } from './admin/families.js';
 
 export async function listNutritionists() {
   const people = await User.find({ role: 'nutritionist', 'nutritionist.availability': 'active' }).sort('name');
@@ -32,7 +33,7 @@ export async function completeOnboarding(input) {
     nutritionist: nutritionist?.id,
     members: [
       { user: user.id, relation: input.you.relation ?? 'Main contact', access: 'edit', status: 'active' },
-      ...input.invites.filter((i) => i.email).map((i) => ({ email: i.email, access: i.access, status: 'invited' })),
+      ...input.invites.filter((i) => i.email).map((i) => ({ email: i.email.toLowerCase(), access: i.access, status: 'invited', inviteToken: newInviteToken(), invitedAt: new Date() })),
     ],
   });
   user.family = family.id;

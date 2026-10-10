@@ -7,6 +7,7 @@ const visitSchema = new mongoose.Schema(
     status: { type: String, enum: ['scheduled', 'reschedule_requested', 'in_progress', 'completed'], default: 'scheduled' },
     code: String,
     scheduledFor: Date,
+    loggedAt: Date, // when the nutritionist saved the visit notes
     date: String, // "Monday 28 September 2026"
     short: String, // "28 Sep"
     time: String,

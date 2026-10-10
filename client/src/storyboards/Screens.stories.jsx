@@ -39,6 +39,8 @@ export const SendUpdate = { render: () => <S.SendUpdate />, name: 'Nutritionist 
 export const AdminOverview = { render: () => <S.AdminOverview />, name: 'Admin / Overview' };
 export const AdminTeam = { render: () => <S.AdminTeam />, name: 'Admin / Nutritionists' };
 export const AdminFamilies = { render: () => <S.AdminFamilies />, name: 'Admin / Families' };
+export const AdminActivity = { render: () => <S.AdminActivity />, name: 'Admin / Activity' };
+export const AdminSettings = { render: () => <S.AdminSettings />, name: 'Admin / Settings' };
 
 export const Onboarding = {
   argTypes: { step: { control: { type: 'range', min: 0, max: 5 } } },

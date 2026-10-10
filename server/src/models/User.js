@@ -10,6 +10,7 @@ const nutritionistProfileSchema = new mongoose.Schema(
     nextOpening: String,
     onTimeRate: String,
     availability: { type: String, enum: ['active', 'on_leave'], default: 'active' },
+    leaveUntil: Date,
     licenceRenewsOn: Date,
   },
   { _id: false },
@@ -31,6 +32,7 @@ const userSchema = new mongoose.Schema(
     // Parent sign-in uses a one-time 6-digit SMS code instead of a password.
     loginCode: { hash: { type: String, select: false }, expiresAt: Date, attempts: { type: Number, default: 0 } },
     tokenVersion: { type: Number, default: 0 }, // bump to sign out everywhere
+    active: { type: Boolean, default: true }, // deactivated accounts can't sign in
   },
   { timestamps: true },
 );
@@ -48,6 +50,8 @@ userSchema.methods.toPublic = function toPublic() {
     email: this.email,
     role: this.role,
     city: this.city,
+    phone: this.phone,
+    active: this.active,
     language: this.language,
     family: this.family,
     parent: this.parent,

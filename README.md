@@ -140,7 +140,8 @@ All routes are under `/api`. Everything except sign-in, onboarding and `/health`
 | Auth | `POST /auth/login`, `/auth/parent-code`, `/auth/parent-code/verify`, `/auth/forgot`, `/auth/logout` (`everywhere` signs out all devices), `GET /auth/me` |
 | Parents (family, the parent, their nutritionist, admins) | `GET /parents`, `/parents/threads`, `/parents/:id/{dashboard,home,profile,labs,nutrition,supplements,visits,documents,messages}`; `PATCH /parents/:id/checklist/:code`, `/parents/:id/supplements/reminders`; `POST /parents/:id/{labs/reports,visits/reschedule,messages}` |
 | Nutritionist | `GET /workspace/clients`, `/workspace/library`, `/workspace/clients/:id/visit`; `POST /workspace/clients/:id/visits`, `/workspace/clients/:id/updates`; `PUT /workspace/clients/:id/plan` |
-| Admin | `GET /admin/overview`, `/admin/nutritionists`, `/admin/families`; `POST /admin/flags/:id/resolve` |
+| Admin | Overview; flags (`resolve`, `reopen`, `notes`, `remind`); families (search, detail, change nutritionist, invite links); nutritionists (list, detail, create, update, leave); accounts (reset password, sign out everywhere, parent code, turn on/off); queues (unreadable lab reports, access requests); service areas; activity log |
+| Invites | `GET /auth/invites/:token`, `POST /auth/invites/accept` (the `/join/:token` page) |
 | Onboarding | `GET /onboarding/nutritionists`, `POST /onboarding` |
 
 `server/test/smoke.sh` exercises the main routes against a running, seeded API.

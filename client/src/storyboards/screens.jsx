@@ -22,7 +22,9 @@ import { initialPlan, PlanBuilderView } from '../features/workspace/PlanBuilderP
 import { SendUpdateView } from '../features/workspace/SendUpdatePage.jsx';
 import { AdminShell } from '../features/admin/AdminLayout.jsx';
 import { AdminOverviewView } from '../features/admin/AdminOverviewPage.jsx';
-import { AdminTable, FAMILY_COLUMNS, TEAM_COLUMNS } from '../features/admin/AdminTablesPage.jsx';
+import { FamiliesView } from '../features/admin/FamiliesPage.jsx';
+import { NutritionistsView } from '../features/admin/NutritionistsPage.jsx';
+import { ActivityView, AreasView } from '../features/admin/OpsPages.jsx';
 import { initialOnboarding, OnboardingView } from '../features/onboarding/OnboardingPage.jsx';
 import { PageHeader } from '../components/layout/index.js';
 import { DEFAULT_UPD } from '@kinwell/shared';
@@ -186,24 +188,43 @@ export function SendUpdate({ sent = false }) {
 
 // ---------- Admin ----------
 export function AdminOverview() {
-  const [data, setData] = useState(fx.adminOverview);
+  const [flags, setFlags] = useState(fx.adminOverview.queue);
+  const [tab, setTab] = useState('open');
   return (
     <AdminShell user={fx.ZARA}>
-      <PageHeader eyebrow="Friday 9 October · All of Lahore" title="Operations overview" divider={false} />
-      <AdminOverviewView data={data} onResolve={(q) => setData((d) => ({ ...d, queue: d.queue.filter((x) => x.id !== q.id) }))} />
+      <PageHeader eyebrow="Saturday 10 October · All of Lahore" title="Operations overview" divider={false} />
+      <AdminOverviewView data={fx.adminOverview} flags={flags} setFlags={setFlags} tab={tab} onTab={setTab} />
     </AdminShell>
   );
 }
-export const AdminTeam = () => (
+export function AdminTeam() {
+  const [q, setQ] = useState('');
+  return (
+    <AdminShell user={fx.ZARA}>
+      <PageHeader eyebrow="All of Lahore" title="Nutritionists" divider={false} />
+      <NutritionistsView rows={fx.team.filter((t) => t.name.toLowerCase().includes(q.toLowerCase()))} q={q} onQuery={setQ} />
+    </AdminShell>
+  );
+}
+export function AdminFamilies() {
+  const [filters, setFilters] = useState({ q: '', status: '', nutritionist: '', page: 1 });
+  return (
+    <AdminShell user={fx.ZARA}>
+      <PageHeader eyebrow="All of Lahore" title="Families" divider={false} />
+      <FamiliesView data={fx.families} team={fx.team} filters={filters} setFilter={(p) => setFilters((f) => ({ ...f, ...p }))} />
+    </AdminShell>
+  );
+}
+export const AdminActivity = () => (
   <AdminShell user={fx.ZARA}>
-    <PageHeader eyebrow="All of Lahore" title="Nutritionists" divider={false} />
-    <AdminTable label="Nutritionists" columns={TEAM_COLUMNS} rows={fx.team} cols="minmax(0,1.5fr) minmax(0,1.3fr) minmax(0,0.6fr) minmax(0,0.8fr) minmax(0,0.7fr) minmax(0,1.3fr)" />
+    <PageHeader eyebrow="Every admin action, newest first" title="Activity" divider={false} />
+    <ActivityView data={fx.activity} onPage={noop} />
   </AdminShell>
 );
-export const AdminFamilies = () => (
+export const AdminSettings = () => (
   <AdminShell user={fx.ZARA}>
-    <PageHeader eyebrow="All of Lahore" title="Families" divider={false} />
-    <AdminTable label="Families" columns={FAMILY_COLUMNS} rows={fx.families} cols="minmax(0,1.3fr) minmax(0,1.4fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,0.8fr)" />
+    <PageHeader eyebrow="How Kinwell is set up" title="Settings" divider={false} />
+    <AreasView areas={fx.adminOverview.coverage} onSave={async () => {}} onRemove={noop} />
   </AdminShell>
 );
 

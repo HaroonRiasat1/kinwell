@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import { User } from '../models/index.js';
+import { Family, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { normalizePhone } from '../utils/phone.js';
 import { signToken } from '../middleware/auth.js';
@@ -14,6 +14,7 @@ export async function login({ email, password, role }) {
   const user = await User.findOne({ email }).select('+passwordHash');
   const ok = user && (await user.checkPassword(password));
   if (!ok) throw ApiError.unauthorized("That email and password don't match. Check them and try again.");
+  if (user.active === false) throw ApiError.unauthorized('This account has been turned off. Contact Kinwell support.', 'account_inactive');
   if (role && user.role !== role) {
     throw ApiError.unauthorized(`This account isn't a ${role} account. Choose the right role above.`);
   }
@@ -54,6 +55,7 @@ export async function requestParentCode({ phone }) {
 
 export async function verifyParentCode({ phone, code }) {
   const user = await User.findOne({ phone: normalizePhone(phone), role: 'parent' }).select('+loginCode.hash');
+  if (user && user.active === false) throw ApiError.unauthorized('This account has been turned off. Ask your family to contact Kinwell.', 'account_inactive');
   const lc = user?.loginCode;
   if (!lc?.hash || lc.expiresAt <= new Date()) throw ApiError.unauthorized('That code has expired. Ask your family for a new one.', 'code_expired');
   if ((lc.attempts ?? 0) >= MAX_ATTEMPTS) throw ApiError.unauthorized('Too many wrong tries. Ask your family for a new code.', 'code_locked');
@@ -85,4 +87,29 @@ export async function logout(user, { everywhere }) {
     await user.save();
   }
   return { signedOut: true };
+}
+
+// ---------- Joining a family from an invite link ----------
+
+async function findInvite(token) {
+  const family = await Family.findOne({ members: { $elemMatch: { inviteToken: token, status: 'invited' } } }).populate('mainContact', 'name');
+  const member = family?.members.find((m) => m.inviteToken === token);
+  if (!member) throw ApiError.notFound('This invite link has expired or was already used. Ask your family to send a new one.', 'invite_invalid');
+  return { family, member };
+}
+
+export async function getInvite(token) {
+  const { family, member } = await findInvite(token);
+  return { family: family.name, invitedBy: family.mainContact?.name, email: member.email, relation: member.relation, access: member.access };
+}
+
+export async function acceptInvite({ token, name, password, city }) {
+  const { family, member } = await findInvite(token);
+  if (await User.exists({ email: member.email })) throw ApiError.badRequest('There is already an account with this email. Sign in instead.');
+  const user = new User({ name, email: member.email, role: 'family', city, family: family.id });
+  await user.setPassword(password);
+  await user.save();
+  Object.assign(member, { user: user.id, status: 'active', inviteToken: undefined });
+  await family.save();
+  return session(user);
 }

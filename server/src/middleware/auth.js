@@ -22,6 +22,7 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
   }
   const user = await User.findById(payload.sub);
   if (!user || user.tokenVersion !== payload.tv) throw ApiError.unauthorized();
+  if (user.active === false) throw ApiError.unauthorized('This account has been turned off. Contact Kinwell support.', 'account_inactive');
   req.user = user;
   next();
 });

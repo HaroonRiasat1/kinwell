@@ -20,7 +20,14 @@ import PlanBuilderPage from './features/workspace/PlanBuilderPage.jsx';
 import SendUpdatePage from './features/workspace/SendUpdatePage.jsx';
 import { AdminLayout } from './features/admin/AdminLayout.jsx';
 import AdminOverviewPage from './features/admin/AdminOverviewPage.jsx';
-import { FamiliesPage, NutritionistsPage } from './features/admin/AdminTablesPage.jsx';
+import FamiliesPage from './features/admin/FamiliesPage.jsx';
+import FamilyDetailPage from './features/admin/FamilyDetailPage.jsx';
+import AdminParentPage from './features/admin/AdminParentPage.jsx';
+import NutritionistsPage from './features/admin/NutritionistsPage.jsx';
+import NutritionistDetailPage from './features/admin/NutritionistDetailPage.jsx';
+import AccountsPage from './features/admin/AccountsPage.jsx';
+import { AccessRequestsPage, ActivityPage, LabUploadsPage, SettingsPage } from './features/admin/OpsPages.jsx';
+import JoinPage from './features/auth/JoinPage.jsx';
 import OnboardingPage from './features/onboarding/OnboardingPage.jsx';
 import DesignSystemPage from './features/design-system/DesignSystemPage.jsx';
 import LandingPage from './features/landing/LandingPage.jsx';
@@ -48,6 +55,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signed-out" element={<SignedOutPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path="/join/:token" element={<JoinPage />} />
       <Route path="/design-system" element={<DesignSystemPage />} />
 
       <Route path="/family" element={<RequireRole roles={['family']}><FamilyLayout /></RequireRole>} />
@@ -79,8 +87,16 @@ export default function App() {
       <Route path="/admin" element={<RequireRole roles={['admin']}><AdminLayout /></RequireRole>}>
         <Route index element={<Navigate to="overview" replace />} />
         <Route path="overview" element={<AdminOverviewPage />} />
-        <Route path="nutritionists" element={<NutritionistsPage />} />
         <Route path="families" element={<FamiliesPage />} />
+        <Route path="families/:id" element={<FamilyDetailPage />} />
+        <Route path="parents/:id" element={<AdminParentPage />} />
+        <Route path="nutritionists" element={<NutritionistsPage />} />
+        <Route path="nutritionists/:id" element={<NutritionistDetailPage />} />
+        <Route path="accounts" element={<AccountsPage />} />
+        <Route path="activity" element={<ActivityPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="queues/lab-uploads" element={<LabUploadsPage />} />
+        <Route path="queues/access-requests" element={<AccessRequestsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -11,6 +11,8 @@ const router = Router();
 router.post('/login', validate(s.loginSchema), c.login);
 router.post('/parent-code', validate(s.parentCodeRequestSchema), c.requestParentCode);
 router.post('/parent-code/verify', validate(s.parentCodeVerifySchema), c.verifyParentCode);
+router.get('/invites/:token', c.getInvite);
+router.post('/invites/accept', validate(s.acceptInviteSchema), c.acceptInvite);
 router.post('/forgot', validate(s.forgotSchema), c.forgot);
 router.post('/logout', requireAuth, validate(s.logoutSchema), c.logout);
 router.get('/me', requireAuth, c.me);

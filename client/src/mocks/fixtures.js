@@ -174,52 +174,74 @@ export const library = {
 
 export const nutritionistsForOnboarding = NUTS.map((n) => ({ id: n.id, name: n.name, credential: n.cred, languages: n.langs, areas: n.areas, next: n.next }));
 
+const flag = (id, status, type, title, meta, action, link, contact = null) => ({ id, status, type, title, meta, action, link: { kind: null, parent: null, family: null, user: null, visit: null, accessRequest: null, ...link }, contact, notes: [], resolved: false });
+
 export const adminOverview = {
   stats: [
-    { label: 'Active families', value: '412', note: '18 joined this month' },
-    { label: 'Visits this week', value: '166', note: 'of 204 booked' },
-    { label: 'Open flags', value: '23', note: '2 need action today' },
-    { label: 'Time to family update', value: '5.2 h', note: 'Average · target under 24 h' },
+    { key: 'families', label: 'Active families', value: '70', note: '8 joined this month', to: '/admin/families' },
+    { key: 'visits', label: 'Visits this week', value: '29', note: 'of 37 booked', to: '/admin/nutritionists' },
+    { key: 'notLogged', label: 'Visits not logged', value: '2', note: 'Past their time, no notes yet', status: 'watch', to: '/admin/nutritionists' },
+    { key: 'flags', label: 'Open flags', value: '5', note: '2 need action today', status: 'attention' },
+    { key: 'update', label: 'Time to family update', value: '12.4 h', note: 'Average, last 30 days · target under 24 h', status: 'normal' },
   ],
   queue: [
-    { id: 'f1', status: 'attention', type: 'Critical result', title: 'Tariq Rahman: fasting sugar 142, rising for 4 months', meta: 'Hina Qureshi · flagged 2 days ago · family told', action: 'Review' },
-    { id: 'f2', status: 'attention', type: 'Visit not logged', title: 'Mumtaz Hussain: 6 Oct visit has no notes', meta: 'Amna Sheikh · 3 days overdue', action: 'Contact' },
-    { id: 'f3', status: 'watch', type: 'Licence', title: 'Usman Tariq: dietitian licence renews in 14 days', meta: 'Pakistan Nutrition & Dietetic Society', action: 'Send reminder' },
-    { id: 'f4', status: 'watch', type: 'Lab upload', title: "4 reports couldn't be read automatically", meta: 'Blurry photos · oldest from yesterday', action: 'Open' },
-    { id: 'f5', status: 'normal', type: 'Access request', title: "Imran Khan wants to add his sister to Zubaida Khan's care team", meta: 'Waiting for main contact to approve', action: 'View' },
+    flag('f1', 'attention', 'Critical result', 'Tariq Rahman: fasting sugar 142, rising for 4 months', 'Hina Qureshi · flagged 2 days ago · family told', 'Review', { kind: 'parent', parent: 'abbu', family: 'rahman' }, { name: 'Hina Qureshi', email: 'hina.qureshi@kinwell.pk' }),
+    flag('f2', 'attention', 'Visit not logged', 'Mumtaz Hussain: 6 Oct visit has no notes', 'Amna Sheikh · 4 days overdue', 'Contact', { kind: 'visit', family: 'hussain' }, { name: 'Amna Sheikh', email: 'amna.sheikh@kinwell.pk', phone: '+923001234567' }),
+    flag('f3', 'watch', 'Licence', 'Usman Tariq: dietitian licence renews in 14 days', 'Pakistan Nutrition & Dietetic Society', 'Send reminder', { kind: 'nutritionist' }, { name: 'Usman Tariq', email: 'usman.tariq@kinwell.pk' }),
+    flag('f4', 'watch', 'Lab upload', "4 reports couldn't be read automatically", 'Blurry or cut-off photos · newest 3 hours ago', 'See reports', { kind: 'labUploads' }),
+    flag('f5', 'normal', 'Access request', "Imran Khan wants to add his sister Nadia to Zubaida Khan's care team", 'Waiting for a decision', 'View', { kind: 'accessRequest' }),
   ],
+  queues: { labUploads: 4, accessRequests: 1 },
   weekBars: [
-    ['Mon', 38, 40],
-    ['Tue', 32, 34],
-    ['Wed', 36, 38],
-    ['Thu', 41, 42],
-    ['Today', 19, 34, true],
-    ['Sat', 0, 16],
-  ].map(([day, done, booked, isToday]) => ({ day, done, booked, isToday: !!isToday })),
+    ['Mon', 3, 0, 3],
+    ['Tue', 5, 1, 6],
+    ['Wed', 10, 0, 10],
+    ['Thu', 0, 1, 1],
+    ['Fri', 5, 0, 5],
+    ['Today', 6, 0, 6, true],
+    ['Sun', 0, 0, 6],
+  ].map(([day, done, overdue, booked, isToday]) => ({ day, done, overdue, booked, upcoming: booked - done - overdue, isToday: !!isToday })),
   coverage: [
-    ['Model Town', 64, 80],
-    ['Gulberg', 71, 72],
-    ['DHA', 58, 90],
-    ['Johar Town', 49, 60],
-    ['Cantt', 33, 40],
+    ['Bahria Town', 9, 12],
+    ['Cantt', 8, 12],
+    ['DHA', 16, 20],
+    ['Gulberg', 15, 14],
+    ['Johar Town', 23, 26],
+    ['Model Town', 8, 15],
   ].map(([area, c, cap]) => {
     const pct = Math.round((c / cap) * 100);
-    return { area, clients: c, capacity: cap, pct, status: pct > 95 ? 'attention' : pct > 80 ? 'watch' : 'normal' };
+    return { id: area, area, clients: c, capacity: cap, pct, status: pct > 95 ? 'attention' : pct > 80 ? 'watch' : 'normal' };
   }),
 };
 
 export const team = [
-  ['Hina Qureshi', 'Model Town, Gulberg', 18, 14, '98%', 'normal', 'Active'],
-  ['Amna Sheikh', 'DHA, Cantt', 22, 17, '91%', 'watch', '1 visit not logged'],
-  ['Usman Tariq', 'Gulberg, Garden Town', 15, 12, '96%', 'watch', 'Licence due 23 Oct'],
-  ['Sadia Malik', 'Johar Town', 20, 16, '94%', 'normal', 'Active'],
-  ['Faraz Ahmed', 'Bahria Town', 9, 0, '—', 'normal', 'On leave until 19 Oct'],
-].map(([name, area, clientsCount, week, onTime, status, label]) => ({ id: name, name, area, clients: clientsCount, week, onTime, status, label }));
+  ['Amna Sheikh', 'DHA Phase 5, DHA Phase 6, Cantt', 22, 6, 11, 2, 95, 'attention', '2 visits not logged'],
+  ['Faraz Ahmed', 'Bahria Town', 9, 0, 0, 0, 89, 'watch', 'On leave until 19 Oct'],
+  ['Hina Qureshi', 'Model Town, Gulberg, Johar Town', 18, 6, 6, 0, 85, 'normal', 'Active'],
+  ['Sadia Malik', 'Johar Town', 20, 9, 10, 0, 90, 'normal', 'Active'],
+  ['Usman Tariq', 'Gulberg, Garden Town', 15, 4, 6, 0, 90, 'watch', 'Licence due 24 Oct'],
+].map(([name, area, clientsCount, weekDone, week, notLogged, onTime, status, label]) => ({ id: name, name, area, clients: clientsCount, weekDone, week, notLogged, onTime, status, label, active: true }));
 
-export const families = [
-  ['Rahman family', 'Sana Rahman · London', 'Ammi 72, Abbu 76', 'Hina Qureshi', 'attention', 'Today'],
-  ['Khan family', 'Imran Khan · Toronto', 'Zubaida 81', 'Hina Qureshi', 'normal', 'Yesterday'],
-  ['Hussain family', 'Ayesha Hussain · Riyadh', 'Mumtaz 69', 'Amna Sheikh', 'attention', '3 days ago'],
-  ['Butt family', 'Saima Butt · Houston', 'Rehana 77, Aslam 80', 'Usman Tariq', 'watch', '2 days ago'],
-  ['Ali family', 'Faisal Ali · Manchester', 'Nasir 74', 'Sadia Malik', 'normal', 'Today'],
-].map(([family, contact, parentsLabel, nutritionist, status, last]) => ({ id: family, family, contact, parents: parentsLabel, nutritionist, status, last }));
+export const families = {
+  items: [
+    ['Rahman family', 'Sana Rahman · London', 'Ammi 72, Abbu 76', 'Hina Qureshi', 'attention', 'Today'],
+    ['Hussain family', 'Ayesha Hussain · Riyadh', 'Mumtaz 69', 'Amna Sheikh', 'attention', '3 days ago'],
+    ['Butt family', 'Saima Butt · Houston', 'Rehana 77, Aslam 80', 'Usman Tariq', 'watch', '2 days ago'],
+    ['Khan family', 'Imran Khan · Toronto', 'Zubaida 81', 'Hina Qureshi', 'normal', 'Yesterday'],
+    ['Ali family', 'Faisal Ali · Manchester', 'Nasir 74', 'Sadia Malik', 'normal', 'Today'],
+  ].map(([family, contact, parentsLabel, nutritionist, status, last]) => ({ id: family, family, contact, parents: parentsLabel, nutritionist, status, last })),
+  page: 1,
+  pages: 4,
+  total: 70,
+};
+
+export const activity = {
+  items: [
+    ['Zara Ahmed', 'Assigned Zubaida Khan (Khan family) to Sadia Malik'],
+    ['Zara Ahmed', 'Sent Amna Sheikh a reminder about “Mumtaz Hussain: 6 Oct visit has no notes”'],
+    ['Zara Ahmed', 'Approved Nadia Khan (nadia.khan@example.com) joining the Khan family'],
+  ].map(([actor, summary], i) => ({ id: `a${i}`, at: new Date(Date.now() - i * 3600e3).toISOString(), actor, summary })),
+  page: 1,
+  pages: 1,
+  total: 3,
+};

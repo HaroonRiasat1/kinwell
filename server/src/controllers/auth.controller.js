@@ -7,3 +7,5 @@ export const forgot = async (req, res) => res.json(await auth.requestPasswordRes
 export const logout = async (req, res) => res.json(await auth.logout(req.user, req.body));
 export const me = async (req, res) => res.json({ user: req.user.toPublic() });
 export const setLanguage = async (req, res) => res.json(await auth.setLanguage(req.user, req.body));
+export const getInvite = async (req, res) => res.json(await auth.getInvite(req.params.token));
+export const acceptInvite = async (req, res) => res.status(201).json(await auth.acceptInvite(req.body));

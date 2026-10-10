@@ -6,3 +6,5 @@ export const logVisit = async (req, res) => res.status(201).json(await svc.logVi
 export const library = async (_req, res) => res.json(await svc.getBuilderLibrary());
 export const savePlan = async (req, res) => res.json(await svc.savePlanDay(req.user, req.params.parentId, req.body));
 export const sendUpdate = async (req, res) => res.status(201).json(await svc.sendFamilyUpdate(req.user, req.params.parentId, req.body));
+export const notifications = async (req, res) => res.json(await svc.notifications(req.user));
+export const readNotification = async (req, res) => res.json(await svc.markNotificationRead(req.user, req.params.id));

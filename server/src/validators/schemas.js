@@ -50,3 +50,49 @@ export const onboardingSchema = z.object({
   nutritionistId: z.string().optional(),
   health: z.object({ conditions: z.array(z.string()).default([]), diet: z.array(z.string()).default([]), medicines: z.string().optional() }).default({}),
 });
+
+// ---------- Invites ----------
+export const acceptInviteSchema = z.object({
+  token: z.string().min(10),
+  name: z.string().trim().min(2, 'Enter your name'),
+  password: z.string().min(8, 'Use at least 8 characters'),
+  city: z.string().trim().optional(),
+});
+
+// ---------- Admin ----------
+const objectId = z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid id');
+const optionalDate = z.union([z.coerce.date(), z.literal(''), z.null()]).optional();
+export const adminListQuery = z.object({
+  q: z.string().optional().default(''),
+  status: z.enum(['normal', 'watch', 'attention']).optional(),
+  role: z.enum(['family', 'nutritionist', 'admin', 'parent']).optional(),
+  nutritionist: objectId.optional(),
+  state: z.enum(['open', 'resolved']).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+export const flagResolveSchema = z.object({ note: z.string().trim().max(500).optional() });
+export const flagNoteSchema = z.object({ text: z.string().trim().min(1).max(500) });
+export const flagRemindSchema = z.object({ message: z.string().trim().min(1).max(500) });
+export const assignSchema = z.object({ nutritionistId: objectId, parentId: objectId.optional() });
+export const inviteSchema = z.object({ email: z.string().trim().toLowerCase().email() });
+export const nutritionistCreateSchema = z.object({
+  name: z.string().trim().min(2, 'Enter their name'),
+  email: z.string().trim().toLowerCase().email('Enter a valid email'),
+  phone: z.string().trim().optional(),
+  credential: z.string().trim().min(2, 'Add their qualification'),
+  languages: z.string().trim().optional().default(''),
+  areas: z.array(z.string().trim().min(1)).min(1, 'Choose at least one area'),
+});
+export const nutritionistUpdateSchema = z.object({
+  phone: z.string().trim().optional(),
+  credential: z.string().trim().optional(),
+  languages: z.string().trim().optional(),
+  areas: z.array(z.string().trim().min(1)).optional(),
+  availability: z.enum(['active', 'on_leave']).optional(),
+  leaveUntil: optionalDate,
+  licenceRenewsOn: optionalDate,
+});
+export const activeSchema = z.object({ active: z.boolean() });
+export const labActionSchema = z.object({ action: z.enum(['retake', 'typed_in', 'dismiss']) });
+export const accessDecisionSchema = z.object({ decision: z.enum(['approve', 'decline']) });
+export const areaSchema = z.object({ id: objectId.optional(), name: z.string().trim().min(2), capacity: z.coerce.number().int().min(0).max(10000) });

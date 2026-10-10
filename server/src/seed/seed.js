@@ -23,6 +23,7 @@ import {
 } from '@kinwell/shared';
 import { connectDb } from '../config/db.js';
 import {
+  AccessRequest,
   DailyLog,
   Dish,
   Document,
@@ -38,7 +39,7 @@ import {
   User,
   Visit,
 } from '../models/index.js';
-import { startOfWeek, todayKey, weekDateKeys, weekdayIndex } from '../utils/time.js';
+import { todayKey, weekDateKeys, weekdayIndex } from '../utils/time.js';
 
 export const DEMO_PASSWORD = 'kinwell-demo';
 
@@ -79,6 +80,7 @@ async function seedPeople() {
         nextOpening,
         onTimeRate,
         availability: key === 'faraz' ? 'on_leave' : 'active',
+        leaveUntil: key === 'faraz' ? daysFromNow(9) : undefined,
         licenceRenewsOn: key === 'usman' ? daysFromNow(14) : daysFromNow(300),
       },
     });
@@ -211,6 +213,7 @@ async function seedRahmanFamily(hina) {
         status: 'completed',
         code: v.id,
         scheduledFor: lahoreTime(todayKey(new Date(`${v.short} 2026 12:00`)), '10:00 am'),
+        loggedAt: new Date(lahoreTime(todayKey(new Date(`${v.short} 2026 12:00`)), '10:00 am').getTime() + 4 * 3600 * 1000),
         date: v.date,
         short: v.short,
         title: v.title,
@@ -257,72 +260,228 @@ async function seedRahmanFamily(hina) {
   return family;
 }
 
-// Other families on Hina's client list (lighter records).
-async function seedOtherFamilies(hina) {
-  const rows = [
-    ['Khan family', 'Imran Khan', 'Toronto', [['Zubaida Khan', 81, 'Gulberg', 'normal', '2 Oct', 'Fri 16 Oct, 10 am']], 'normal', 1],
-    ['Hussain family', 'Ayesha Hussain', 'Riyadh', [['Mumtaz Hussain', 69, 'DHA Phase 5', 'attention', '6 Oct', 'Tomorrow, 4 pm']], 'attention', 3],
-    ['Butt family', 'Saima Butt', 'Houston', [['Rehana Butt', 77, 'Cantt', 'watch', '1 Oct', 'Mon 19 Oct, 3 pm']], 'watch', 2],
-    ['Ali family', 'Faisal Ali', 'Manchester', [['Nasir Ali', 74, 'Johar Town', 'normal', '30 Sep', 'Wed 21 Oct, 11 am']], 'normal', 0],
-  ];
+// ---------- The rest of the client base ----------
+// Deterministic random numbers, so every seed produces the same "random" team.
+function mulberry32(a) {
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20261010);
+const pick = (list) => list[Math.floor(rand() * list.length)];
+const between = (lo, hi) => lo + Math.floor(rand() * (hi - lo + 1));
+
+const MOTHERS = ['Shabana', 'Nasreen', 'Parveen', 'Rukhsana', 'Zahida', 'Kausar', 'Naseem', 'Rubina', 'Shamim', 'Bushra', 'Farzana', 'Tahira', 'Yasmin', 'Saeeda', 'Khalida', 'Razia'];
+const FATHERS = ['Aslam', 'Javed', 'Rashid', 'Akram', 'Saleem', 'Anwar', 'Iqbal', 'Khalid', 'Nadeem', 'Pervaiz', 'Shahid', 'Zafar', 'Mushtaq', 'Ghulam', 'Bashir', 'Rafiq'];
+const SURNAMES = ['Malik', 'Chaudhry', 'Sheikh', 'Siddiqui', 'Mirza', 'Raza', 'Awan', 'Bhatti', 'Hashmi', 'Gill', 'Rana', 'Abbasi', 'Ansari', 'Dar', 'Mughal', 'Javed'];
+const CHILDREN = ['Ayesha', 'Hamza', 'Zainab', 'Usman', 'Fatima', 'Ali', 'Maryam', 'Omar', 'Hira', 'Sara', 'Hassan', 'Amna', 'Fahad', 'Mehwish', 'Danish', 'Saad'];
+const ABROAD = ['London', 'Dubai', 'Toronto', 'Riyadh', 'Houston', 'Manchester', 'Sydney', 'New York', 'Doha', 'Birmingham'];
+const UPDATES = [
+  'Visit went well today. Blood pressure is steady and appetite is good. No changes to the plan this week.',
+  "Today's visit is done. Sugar is a little higher, so I've swapped white rice for brown at dinner.",
+  'All good today. Walking most days and taking tablets on time. Keep encouraging the morning walk.',
+  "Checked in today. Slightly tired, so I've added more dal and palak at lunch. I'll re-check iron next time.",
+];
+
+const DAY_MS = 24 * 3600 * 1000;
+const lahoreAt = (date, hour) => lahoreTime(todayKey(date), `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'pm' : 'am'}`);
+
+// Clients per nutritionist (including the named families below) and where they work.
+const TEAM_PLAN = {
+  hina: { clients: 18, areas: ['Model Town', 'Gulberg', 'Johar Town'] },
+  amna: { clients: 22, areas: ['DHA Phase 5', 'DHA Phase 6', 'Cantt'] },
+  usman: { clients: 15, areas: ['Gulberg', 'Garden Town'] },
+  sadia: { clients: 20, areas: ['Johar Town'] },
+  faraz: { clients: 9, areas: ['Bahria Town'] },
+};
+
+let sharedHash;
+async function quickUser(fields) {
+  // One bcrypt hash reused for generated accounts keeps seeding fast.
+  sharedHash ??= await (async () => {
+    const u = new User({ name: 'x', role: 'family' });
+    await u.setPassword(DEMO_PASSWORD);
+    return u.passwordHash;
+  })();
+  return User.create({ ...fields, passwordHash: sharedHash });
+}
+
+async function makeFamily({ surname, contactFirst, city, nutritionist, members, createdDaysAgo, activeDaysAgo }) {
+  const contactName = `${contactFirst} ${surname}`;
+  const contact = await quickUser({
+    name: contactName,
+    email: `${contactFirst}.${surname}.${between(10, 99)}@example.com`.toLowerCase(),
+    role: 'family',
+    city,
+  });
+  const created = new Date(Date.now() - createdDaysAgo * DAY_MS);
+  const [family] = await Family.insertMany(
+    [
+      {
+        name: `${surname} family`,
+        mainContact: contact.id,
+        nutritionist: nutritionist.id,
+        members: [{ user: contact.id, relation: 'Main contact', access: 'edit' }],
+        lastActivityAt: new Date(Date.now() - activeDaysAgo * DAY_MS),
+        createdAt: created,
+        updatedAt: created,
+      },
+    ],
+    { timestamps: false },
+  );
+  contact.family = family.id;
+  await contact.save();
   const parents = [];
-  for (const [familyName, contactName, city, members, status, daysAgo] of rows) {
-    const contact = await makeUser({ name: contactName, email: `${contactName.toLowerCase().replace(' ', '.')}@example.com`, role: 'family', city });
-    const family = await Family.create({
-      name: familyName,
-      mainContact: contact.id,
-      nutritionist: hina.id,
-      members: [{ user: contact.id, relation: 'Main contact', access: 'edit' }],
-      status,
-      lastActivityAt: daysFromNow(-daysAgo),
-    });
-    contact.family = family.id;
-    await contact.save();
-    for (const [fullName, age, area, overall, lastVisit, nextVisit] of members) {
-      parents.push(
-        await Parent.create({ family: family.id, nutritionist: hina.id, key: fullName.split(' ')[0].toLowerCase(), short: fullName, fullName, age, city: 'Lahore', area, overall, lastVisit, nextVisit }),
-      );
+  for (const m of members) {
+    parents.push(
+      await Parent.create({
+        family: family.id,
+        nutritionist: nutritionist.id,
+        key: m.name.split(' ')[0].toLowerCase(),
+        short: m.name,
+        fullName: m.name,
+        age: m.age,
+        city: 'Lahore',
+        area: m.area,
+        overall: m.overall,
+        overallTitle: { normal: 'Doing well', watch: 'Keeping an eye on it', attention: 'Needs attention' }[m.overall],
+      }),
+    );
+  }
+  return { family, contact, parents };
+}
+
+/** Named families from the design, then generated ones up to each nutritionist's client count. */
+async function seedClientBase(team, rahmanParents) {
+  const named = [
+    { surname: 'Khan', contactFirst: 'Imran', city: 'Toronto', nut: 'hina', members: [{ name: 'Zubaida Khan', age: 81, area: 'Gulberg', overall: 'normal' }], createdDaysAgo: 120, activeDaysAgo: 1 },
+    { surname: 'Hussain', contactFirst: 'Ayesha', city: 'Riyadh', nut: 'amna', members: [{ name: 'Mumtaz Hussain', age: 69, area: 'DHA Phase 5', overall: 'attention' }], createdDaysAgo: 200, activeDaysAgo: 3 },
+    { surname: 'Butt', contactFirst: 'Saima', city: 'Houston', nut: 'usman', members: [{ name: 'Rehana Butt', age: 77, area: 'Cantt', overall: 'watch' }, { name: 'Aslam Butt', age: 80, area: 'Cantt', overall: 'normal' }], createdDaysAgo: 90, activeDaysAgo: 2 },
+    { surname: 'Ali', contactFirst: 'Faisal', city: 'Manchester', nut: 'sadia', members: [{ name: 'Nasir Ali', age: 74, area: 'Johar Town', overall: 'normal' }], createdDaysAgo: 60, activeDaysAgo: 0 },
+  ];
+  const clients = Object.fromEntries(Object.keys(TEAM_PLAN).map((k) => [k, []]));
+  clients.hina.push(...rahmanParents);
+  const byName = {};
+
+  for (const f of named) {
+    const made = await makeFamily({ ...f, nutritionist: team[f.nut] });
+    clients[f.nut].push(...made.parents);
+    byName[f.surname] = made;
+  }
+
+  let n = 0;
+  for (const [key, plan] of Object.entries(TEAM_PLAN)) {
+    while (clients[key].length < plan.clients) {
+      n++;
+      const surname = SURNAMES[n % SURNAMES.length];
+      const couple = n % 5 === 0 && clients[key].length + 2 <= plan.clients;
+      const area = pick(plan.areas);
+      const roll = rand();
+      const overall = roll < 0.6 ? 'normal' : roll < 0.9 ? 'watch' : 'attention';
+      const members = [{ name: `${MOTHERS[n % MOTHERS.length]} ${surname}`, age: between(64, 86), area, overall }];
+      if (couple) members.push({ name: `${FATHERS[n % FATHERS.length]} ${surname}`, age: between(66, 88), area, overall: 'normal' });
+      const made = await makeFamily({
+        surname,
+        contactFirst: CHILDREN[n % CHILDREN.length],
+        city: pick(ABROAD),
+        nutritionist: team[key],
+        members,
+        createdDaysAgo: n % 9 === 0 ? between(1, 8) : between(20, 280),
+        activeDaysAgo: between(0, 12),
+      });
+      clients[key].push(...made.parents);
     }
   }
-  return parents;
+  return { clients, byName };
 }
 
-// This week's visits across the team, so the admin chart reflects real records.
-async function seedWeekVisits(nutritionists, parents) {
-  const WEEKV = [[38, 40], [32, 34], [36, 38], [41, 42], [19, 34], [0, 16]];
-  const active = ['hina', 'amna', 'usman', 'sadia'].map((k) => nutritionists[k]);
-  const monday = startOfWeek();
-  const docs = [];
-  let n = 0;
-  WEEKV.forEach(([done, booked], day) => {
-    for (let i = 0; i < booked; i++, n++) {
-      const at = new Date(monday);
-      at.setUTCDate(monday.getUTCDate() + day);
-      at.setUTCHours(4 + (i % 8), 0, 0, 0); // 9 am – 4 pm Lahore
-      docs.push({ parent: parents[n % parents.length].id, nutritionist: active[n % active.length].id, status: i < done ? 'completed' : 'scheduled', scheduledFor: at, title: 'Home visit' });
+/**
+ * Every client (except the Rahmans, who have their own history) is seen every two weeks:
+ * a recent visit with notes and an update to the family, and the next one booked.
+ */
+async function seedVisitRhythm(team, clients, { notLogged = {} } = {}) {
+  const now = Date.now();
+  const visits = [];
+  const messages = [];
+  for (const [key, list] of Object.entries(clients)) {
+    const nut = team[key];
+    const onLeave = nut.nutritionist?.availability === 'on_leave';
+    for (const p of list) {
+      if (p.key === 'ammi' || p.key === 'abbu') continue;
+      const forced = notLogged[p.id]; // { daysAgo, hour } for a visit that still has no notes
+      // Someone on leave last saw clients before their leave began (over a week ago).
+      const offset = forced?.daysAgo ?? (onLeave ? between(8, 13) : between(0, 13));
+      const hour = forced?.hour ?? between(9, 16);
+      const last = lahoreAt(new Date(now - offset * DAY_MS), hour);
+      const previous = new Date(last.getTime() - 14 * DAY_MS);
+      let next = new Date(last.getTime() + 14 * DAY_MS);
+      if (onLeave && nut.nutritionist.leaveUntil && next < nut.nutritionist.leaveUntil) next = lahoreAt(new Date(nut.nutritionist.leaveUntil.getTime() + between(1, 5) * DAY_MS), hour);
+
+      for (const at of [previous, last]) {
+        if (at.getTime() > now) {
+          visits.push({ parent: p.id, nutritionist: nut.id, status: 'scheduled', scheduledFor: at, title: 'Home visit' });
+          continue;
+        }
+        if (forced && at === last) {
+          visits.push({ parent: p.id, nutritionist: nut.id, status: 'scheduled', scheduledFor: at, title: 'Home visit' });
+          continue;
+        }
+        const late = rand() < 0.1;
+        const loggedAt = new Date(at.getTime() + (late ? between(26, 40) : between(1, 18)) * 3600 * 1000);
+        visits.push({ parent: p.id, nutritionist: nut.id, status: 'completed', scheduledFor: at, loggedAt: loggedAt.getTime() > now ? new Date(now) : loggedAt, title: 'Home visit', short: todayKey(at) });
+        const sent = new Date(Math.min(now, loggedAt.getTime() + between(0, 3) * 3600 * 1000));
+        messages.push({ parent: p.id, from: nut.id, fromKey: key, fromName: nut.name, fromRole: 'Nutritionist', text: pick(UPDATES), timeLabel: 'Visit update', createdAt: sent, updatedAt: sent });
+      }
+      visits.push({ parent: p.id, nutritionist: nut.id, status: 'scheduled', scheduledFor: next, title: 'Home visit' });
     }
-  });
-  // One of Tuesday's unfinished visits by Amna still has no notes.
-  const tuesdayOpen = docs.find((d, i) => i >= 40 && i < 74 && d.status === 'scheduled');
-  tuesdayOpen.status = 'in_progress';
-  tuesdayOpen.nutritionist = nutritionists.amna.id;
-  await Visit.insertMany(docs);
+  }
+  await Visit.insertMany(visits);
+  await Message.insertMany(messages, { timestamps: false });
 }
 
-async function seedOps() {
+async function seedOps(team, rahman, byName, clients) {
+  const { tariq, rahmanFamily } = rahman;
+  const mumtaz = byName.Hussain.parents[0];
+  const overdue = await Visit.findOne({ parent: mumtaz.id, status: 'scheduled', scheduledFor: { $lt: new Date() } }).sort('-scheduledFor');
+  const overdueDays = overdue ? Math.max(1, Math.round((Date.now() - overdue.scheduledFor) / DAY_MS)) : 0;
+  const shortDay = (d) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Karachi' }).format(d);
+
+  // Four uploads the lab reader couldn't read, on real client records.
+  const candidates = Object.values(clients).flat().filter((p) => p.key !== 'ammi' && p.key !== 'abbu');
+  const reasons = ['Blurry photo', 'The bottom of the page is cut off', 'Too dark to read', 'Not a lab report'];
+  await LabReport.insertMany(
+    reasons.map((reason, i) => {
+      const at = new Date(Date.now() - (i * 9 + 3) * 3600 * 1000);
+      return { parent: candidates[(i * 7 + 3) % candidates.length].id, lab: 'Uploaded report', file: `IMG_${2040 + i}.jpg`, by: `Uploaded by ${CHILDREN[(i * 3) % CHILDREN.length]}`, status: 'failed', failureReason: reason, createdAt: at, updatedAt: at };
+    }),
+    { timestamps: false },
+  );
+
+  const khan = byName.Khan;
+  const request = await AccessRequest.create({ family: khan.family.id, requestedBy: khan.contact.id, name: 'Nadia Khan', email: 'nadia.khan@example.com', relation: 'Daughter', access: 'view' });
+
   await Flag.insertMany([
-    { status: 'attention', type: 'Critical result', title: 'Tariq Rahman: fasting sugar 142, rising for 4 months', meta: 'Hina Qureshi · flagged 2 days ago · family told', action: 'Review' },
-    { status: 'attention', type: 'Visit not logged', title: 'Mumtaz Hussain: 6 Oct visit has no notes', meta: 'Amna Sheikh · 3 days overdue', action: 'Contact' },
-    { status: 'watch', type: 'Licence', title: 'Usman Tariq: dietitian licence renews in 14 days', meta: 'Pakistan Nutrition & Dietetic Society', action: 'Send reminder' },
-    { status: 'watch', type: 'Lab upload', title: "4 reports couldn't be read automatically", meta: 'Blurry photos · oldest from yesterday', action: 'Open' },
-    { status: 'normal', type: 'Access request', title: "Imran Khan wants to add his sister to Zubaida Khan's care team", meta: 'Waiting for main contact to approve', action: 'View' },
+    { status: 'attention', type: 'Critical result', title: 'Tariq Rahman: fasting sugar 142, rising for 4 months', meta: 'Hina Qureshi · flagged 2 days ago · family told', action: 'Review', link: { kind: 'parent', parent: tariq.id, family: rahmanFamily.id, user: team.hina.id } },
+    ...(overdue
+      ? [{ status: 'attention', type: 'Visit not logged', title: `Mumtaz Hussain: ${shortDay(overdue.scheduledFor)} visit has no notes`, meta: `Amna Sheikh · ${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue`, action: 'Contact', link: { kind: 'visit', visit: overdue.id, parent: mumtaz.id, family: byName.Hussain.family.id, user: team.amna.id } }]
+      : []),
+    { status: 'watch', type: 'Licence', title: 'Usman Tariq: dietitian licence renews in 14 days', meta: 'Pakistan Nutrition & Dietetic Society', action: 'Send reminder', link: { kind: 'nutritionist', user: team.usman.id } },
+    { status: 'watch', type: 'Lab upload', title: "4 reports couldn't be read automatically", meta: 'Blurry or cut-off photos · newest 3 hours ago', action: 'See reports', link: { kind: 'labUploads' } },
+    { status: 'normal', type: 'Access request', title: "Imran Khan wants to add his sister Nadia to Zubaida Khan's care team", meta: 'Waiting for a decision', action: 'View', link: { kind: 'accessRequest', accessRequest: request.id, family: khan.family.id } },
   ]);
+
   await ServiceArea.insertMany([
-    { name: 'Model Town', activeClients: 64, capacity: 80 },
-    { name: 'Gulberg', activeClients: 71, capacity: 72 },
-    { name: 'DHA', activeClients: 58, capacity: 90 },
-    { name: 'Johar Town', activeClients: 49, capacity: 60 },
-    { name: 'Cantt', activeClients: 33, capacity: 40 },
+    { name: 'Model Town', capacity: 15 },
+    { name: 'Gulberg', capacity: 14 },
+    { name: 'Johar Town', capacity: 26 },
+    { name: 'DHA', capacity: 20 },
+    { name: 'Cantt', capacity: 12 },
+    { name: 'Garden Town', capacity: 10 },
+    { name: 'Bahria Town', capacity: 12 },
   ]);
   await Dish.insertMany(Object.entries(DISHES).map(([code, d]) => ({ code, name: d.n, nut: d.nut, why: d.why, link: d.link, i18n: { ur: ur.dishes[code] } })));
 }
@@ -331,11 +490,16 @@ export async function seed() {
   await mongoose.connection.dropDatabase();
   await Promise.all(mongoose.modelNames().map((name) => mongoose.model(name).syncIndexes()));
   const { nutritionists } = await seedPeople();
-  await seedRahmanFamily(nutritionists.hina);
-  const otherParents = await seedOtherFamilies(nutritionists.hina);
-  // Team-wide visit volume goes on the lighter records so it doesn't show in the Rahman family's history.
-  await seedWeekVisits(nutritionists, otherParents);
-  await seedOps();
+  const rahmanFamily = await seedRahmanFamily(nutritionists.hina);
+  const rahmanParents = await Parent.find({ family: rahmanFamily.id });
+  const { clients, byName } = await seedClientBase(nutritionists, rahmanParents);
+  // Two of Amna's recent visits have no notes yet: Mumtaz Hussain's, and one more.
+  const mumtaz = byName.Hussain.parents[0];
+  const another = clients.amna.find((p) => p.id !== mumtaz.id);
+  await seedVisitRhythm(nutritionists, clients, {
+    notLogged: { [mumtaz.id]: { daysAgo: 4, hour: 11 }, [another.id]: { daysAgo: 2, hour: 15 } },
+  });
+  await seedOps(nutritionists, { tariq: rahmanParents.find((p) => p.key === 'abbu'), rahmanFamily }, byName, clients);
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

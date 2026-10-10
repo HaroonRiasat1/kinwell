@@ -7,6 +7,8 @@ const memberSchema = new mongoose.Schema(
     relation: String,
     access: { type: String, enum: ['view', 'edit'], default: 'view' },
     status: { type: String, enum: ['active', 'invited'], default: 'active' },
+    inviteToken: { type: String, index: true, sparse: true }, // one-time join link for invited members
+    invitedAt: Date,
   },
   { _id: false },
 );

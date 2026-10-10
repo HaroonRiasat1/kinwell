@@ -7,7 +7,7 @@ const labReportSchema = new mongoose.Schema(
     date: String,
     file: String,
     by: String,
-    status: { type: String, enum: ['processing', 'read', 'failed'], default: 'read' },
+    status: { type: String, enum: ['processing', 'read', 'failed', 'retake_requested', 'typed_in', 'dismissed'], default: 'read' },
     resultsFound: Number,
     failureReason: String,
   },

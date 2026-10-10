@@ -34,6 +34,7 @@ const MEAL_TIMES = ['8:00 am', '1:30 pm', '8:00 pm', '5:00 pm'];
 
 const summary = (p) => ({
   id: p.id,
+  familyId: String(p.family),
   key: p.key,
   short: p.short,
   fullName: p.fullName,

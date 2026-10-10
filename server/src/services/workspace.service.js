@@ -1,5 +1,5 @@
 import { LIB_SUPPS as SUPPLEMENT_CATALOG, MARKER_NAMES } from '@kinwell/shared';
-import { Dish, Family, MealPlan, Message, Parent, Visit } from '../models/index.js';
+import { Dish, Family, MealPlan, Message, Notification, Parent, Visit } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { visitSummary } from './parent.service.js';
 
@@ -43,13 +43,20 @@ export async function getVisitContext(nutritionist, parentId) {
 export async function logVisit(nutritionist, parentId, input) {
   const parent = await ownClient(nutritionist, parentId);
   const now = new Date();
-  const visit = await Visit.create({
+  // Complete the booked visit this note is for (the most recent one that's due), or record a new one.
+  const booked = await Visit.findOne({
     parent: parent.id,
+    status: { $in: ['scheduled', 'in_progress', 'reschedule_requested'] },
+    scheduledFor: { $lte: new Date(now.getTime() + 12 * 3600 * 1000) },
+  }).sort('-scheduledFor');
+  const visit = booked ?? new Visit({ parent: parent.id, scheduledFor: now });
+  const when = visit.scheduledFor ?? now;
+  Object.assign(visit, {
     nutritionist: nutritionist.id,
     status: 'completed',
-    scheduledFor: now,
-    date: new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now),
-    short: new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(now),
+    loggedAt: now,
+    date: new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Karachi' }).format(when),
+    short: new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Karachi' }).format(when),
     title: input.title ?? 'Home visit',
     summary: input.notes?.slice(0, 140) ?? '',
     obs: input.observations,
@@ -57,6 +64,7 @@ export async function logVisit(nutritionist, parentId, input) {
     tests: input.tests,
     mood: input.mood,
   });
+  await visit.save();
   parent.lastVisit = visit.short;
   await parent.save();
   return { id: visit.id };
@@ -98,4 +106,15 @@ export async function sendFamilyUpdate(nutritionist, parentId, { text }) {
     timeLabel: 'Just now',
   });
   return { id: msg.id, sent: true };
+}
+
+/** Notices for this nutritionist (e.g. reminders from admins), newest first. */
+export async function notifications(nutritionist) {
+  const list = await Notification.find({ user: nutritionist.id }).sort('-createdAt').limit(20);
+  return list.map((n) => ({ id: n.id, title: n.title, body: n.body, from: n.from, read: n.read, at: n.createdAt }));
+}
+
+export async function markNotificationRead(nutritionist, id) {
+  await Notification.updateOne({ _id: id, user: nutritionist.id }, { read: true });
+  return notifications(nutritionist);
 }

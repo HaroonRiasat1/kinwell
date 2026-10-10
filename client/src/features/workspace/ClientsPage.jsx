@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, Button, Card, Chip, EmptyState, Icon, SkeletonCard, StatusTag } from '../../components/ui/index.js';
 import { longDate } from '../../lib/dates.js';
 import { useWorkspace } from './WorkspaceLayout.jsx';
+import { Notices } from './Notices.jsx';
 
 const FILTERS = [
   ['all', 'All'],
@@ -91,6 +92,8 @@ export default function ClientsPage() {
   if (clients.error) return <EmptyState title="We couldn't load your clients" action={<Button onClick={clients.reload}>Try again</Button>} />;
   if (!clients.data) return <SkeletonCard minHeight={420} />;
   return (
+    <>
+    <Notices />
     <ClientsView
       clients={clients.data}
       filter={filter}
@@ -102,5 +105,6 @@ export default function ClientsPage() {
         navigate(`/workspace/visit/${c.id}`);
       }}
     />
+    </>
   );
 }

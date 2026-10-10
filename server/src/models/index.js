@@ -12,3 +12,6 @@ export { Message } from './Message.js';
 export { Document } from './Document.js';
 export { Flag } from './Flag.js';
 export { ServiceArea } from './ServiceArea.js';
+export { AuditLog } from './AuditLog.js';
+export { Notification } from './Notification.js';
+export { AccessRequest } from './AccessRequest.js';

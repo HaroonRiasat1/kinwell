@@ -11,6 +11,8 @@ router.use(requireAuth, requireRole('nutritionist'));
 
 router.get('/clients', c.clients);
 router.get('/library', c.library);
+router.get('/notifications', c.notifications);
+router.post('/notifications/:id/read', c.readNotification);
 router.get('/clients/:parentId/visit', c.visitContext);
 router.post('/clients/:parentId/visits', validate(s.visitLogSchema), c.logVisit);
 router.put('/clients/:parentId/plan', validate(s.planDaySchema), c.savePlan);
