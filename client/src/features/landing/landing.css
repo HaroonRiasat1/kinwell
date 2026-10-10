@@ -2,6 +2,9 @@
 .lp {
   position: relative;
   min-height: 100vh;
+  /* The site is English: not the Urdu font stack or the taller line height the body gets in Urdu. */
+  font-family: var(--kw-font);
+  line-height: 1.5;
   overflow-x: clip;
   background: var(--kw-page);
   color: var(--kw-ink);
@@ -167,6 +170,7 @@
   margin-left: auto;
 }
 .lp-nav__links a {
+  white-space: nowrap;
   padding: 10px 14px;
   border-radius: 999px;
   color: var(--kw-ink-2);
@@ -181,7 +185,7 @@
 .lp-nav .kw-brand {
   padding: 0;
 }
-@media (max-width: 860px) {
+@media (max-width: 1000px) {
   .lp-nav__links {
     display: none;
   }

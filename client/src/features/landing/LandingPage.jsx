@@ -4,6 +4,7 @@ import { Avatar, Button, CheckRow, Icon, Kicker, ProgressRing, StatusTag, TrendC
 import { MarkerCard } from '../family/DashboardPage.jsx';
 // Example data from the design (the Rahman family) so previews are real components, not screenshots.
 import { dashboard, labs } from '../../mocks/fixtures.js';
+import { ExplainerVideo } from './ExplainerVideo.jsx';
 import './landing.css';
 
 const demo = dashboard('ammi');
@@ -42,6 +43,7 @@ function Nav() {
         <BrandMark to="/" />
         <div className="lp-nav__links">
           <a href="#how">How it works</a>
+          <a href="#watch">Watch</a>
           <a href="#who">Who it's for</a>
           <a href="#features">Features</a>
           <a href="#faq">Questions</a>
@@ -233,7 +235,9 @@ export default function LandingPage() {
   const [who, setWho] = useState('family');
   const aud = AUDIENCES[who];
   return (
-    <div className="lp" ref={root}>
+    // The website is in English: keep it English and left-to-right even when this device's app
+    // language is Urdu (which sets dir="rtl" on the whole document).
+    <div className="lp" ref={root} lang="en" dir="ltr">
       <div className="lp-aurora" aria-hidden="true">
         <span />
         <span />
@@ -314,6 +318,18 @@ export default function LandingPage() {
                 <p>{s.text}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section id="watch" className="lp-wrap stack" style={{ '--gap': '32px', paddingBottom: 'clamp(64px, 10vw, 128px)' }} aria-labelledby="watch-h">
+          <div className="stack lp-reveal" style={{ '--gap': '14px' }}>
+            <Kicker tone="teal">See it in action</Kicker>
+            <h2 id="watch-h" className="lp-h2">
+              One week with Ammi, in 30 seconds.
+            </h2>
+          </div>
+          <div className="lp-reveal">
+            <ExplainerVideo />
           </div>
         </section>
 
