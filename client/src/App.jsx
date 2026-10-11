@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { HOME_FOR_ROLE, useAuth } from './context/AuthContext.jsx';
 import LoginPage from './features/auth/LoginPage.jsx';
 import SignedOutPage from './features/auth/SignedOutPage.jsx';
@@ -33,6 +33,8 @@ import JoinPage from './features/auth/JoinPage.jsx';
 import OnboardingPage from './features/onboarding/OnboardingPage.jsx';
 import DesignSystemPage from './features/design-system/DesignSystemPage.jsx';
 import LandingPage from './features/landing/LandingPage.jsx';
+import CookiesPage from './features/legal/CookiesPage.jsx';
+import { CookieNotice } from './features/legal/CookieNotice.jsx';
 
 /** Only lets through signed-in users with one of `roles`; everyone else goes to sign in. */
 function RequireRole({ roles, children }) {
@@ -50,7 +52,20 @@ function Home() {
   return user ? <Navigate to={HOME_FOR_ROLE[user.role]} replace /> : <LandingPage />;
 }
 
+// Signed-in areas: the notice was already shown on the website or sign-in page before getting here.
+const PRIVATE_AREAS = /^\/(family|parent|workspace|admin)(\/|$)/;
+
 export default function App() {
+  const { pathname } = useLocation();
+  return (
+    <>
+      <AppRoutes />
+      {!PRIVATE_AREAS.test(pathname) && pathname !== '/cookies' && <CookieNotice />}
+    </>
+  );
+}
+
+function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
@@ -59,6 +74,7 @@ export default function App() {
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="/join/:token" element={<JoinPage />} />
       <Route path="/design-system" element={<DesignSystemPage />} />
+      <Route path="/cookies" element={<CookiesPage />} />
 
       <Route path="/family" element={<RequireRole roles={['family']}><FamilyLayout /></RequireRole>} />
       <Route path="/family/:parentId/simple" element={<RequireRole roles={['family']}><ParentHomePage familyPreview /></RequireRole>} />

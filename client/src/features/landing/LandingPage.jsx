@@ -457,6 +457,7 @@ export default function LandingPage() {
           <a href="#features">Features</a>
           <a href="#faq">Questions</a>
           <a href="/login">Sign in</a>
+          <a href="/cookies">Cookies</a>
         </nav>
         <span>© {new Date().getFullYear()} Kinwell · Lahore</span>
       </footer>

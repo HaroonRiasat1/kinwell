@@ -15,11 +15,11 @@
       "destination": "/api"
     },
     {
-      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin)",
+      "source": "/(login|signed-out|onboarding|design-system|cookies|family|parent|workspace|admin)",
       "destination": "/app.html"
     },
     {
-      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin|join)/(.*)",
+      "source": "/(login|signed-out|onboarding|design-system|cookies|family|parent|workspace|admin|join)/(.*)",
       "destination": "/app.html"
     }
   ],
@@ -50,7 +50,7 @@
       ]
     },
     {
-      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin)",
+      "source": "/(login|signed-out|onboarding|design-system|cookies|family|parent|workspace|admin)",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -59,7 +59,7 @@
       ]
     },
     {
-      "source": "/(login|signed-out|onboarding|design-system|family|parent|workspace|admin|join|api)/(.*)",
+      "source": "/(login|signed-out|onboarding|design-system|cookies|family|parent|workspace|admin|join|api)/(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",
