@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/index.js",
-    "inspect": "npx @modelcontextprotocol/inspector node src/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector -e KINWELL_API_URL=http://localhost:4000/api -e KINWELL_EMAIL=hina.qureshi@kinwell.pk -e KINWELL_PASSWORD=kinwell-demo node src/index.js",
     "test": "node --test --test-concurrency=1 test/mcp.test.js"
   },
   "engines": {

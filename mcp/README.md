@@ -73,13 +73,55 @@ Prompt: **weekly_parent_summary**.
 `get_nutritionist`, `list_unreadable_reports`, `handle_unreadable_report`, `list_access_requests`,
 `decide_access_request`, `get_activity`. Prompt: **triage_flags**.
 
-## Develop
+## Test it
+
+Everything below uses the local demo data, so no real family is affected. Start the database and API
+first (from the `kinwell` folder):
 
 ```bash
-npm run seed -w server && npm run dev -w server   # local API with demo data
-npm test -w @kinwell/mcp                          # starts the MCP server as each role and calls its tools
-npm run inspect -w @kinwell/mcp                   # MCP Inspector in the browser (set the env vars first)
+npm run db:up && npm run seed -w server && npm run dev -w server
 ```
+
+Every demo account uses the password `kinwell-demo`: `sana.rahman@gmail.com` (family),
+`hina.qureshi@kinwell.pk` (nutritionist), `zara.ahmed@kinwell.pk` (admin).
+
+### 1. Automated tests
+
+```bash
+npm test -w @kinwell/mcp
+```
+
+Starts the server as each role through a real MCP client and calls its tools. Expect `# pass 13`.
+
+### 2. MCP Inspector (click through the tools in a browser)
+
+```bash
+npx @modelcontextprotocol/inspector -e KINWELL_API_URL=http://localhost:4000/api -e KINWELL_EMAIL=hina.qureshi@kinwell.pk -e KINWELL_PASSWORD=kinwell-demo node mcp/src/index.js
+```
+
+(`npm run inspect -w @kinwell/mcp` does the same as Hina.) Click **Connect**, then **Tools → List Tools**, pick one (e.g. `get_today`) and **Run Tool**.
+**Prompts** shows the role's ready-made prompt.
+
+### 3. With Claude Code
+
+```bash
+claude mcp add kinwell-local -e KINWELL_API_URL=http://localhost:4000/api -e KINWELL_EMAIL=hina.qureshi@kinwell.pk -e KINWELL_PASSWORD=kinwell-demo -- node "/Users/haroonriasat-amplon/Airplane game /kinwell/mcp/src/index.js"
+claude mcp list        # should show: kinwell-local ... ✔ Connected
+```
+
+Then open a **new** Claude Code session in the same project (servers load when a session starts),
+run `/mcp` to see its 13 tools, and try:
+
+- "Use the whoami tool" → Hina Qureshi, nutritionist
+- "Brief me for today's visits"
+- "Who's waiting for a reply?"
+- "Log a visit for Fatima Rahman: BP 128/82, fasting sugar 112, weight 63.5, she's doing well" —
+  Claude should check with you first, because this notifies the family. Sign in at
+  http://localhost:5173 as Sana to see the visit card in Fatima's messages.
+
+To try another role, add it again under another name (e.g. `kinwell-sana` with Sana's email). Remove
+with `claude mcp remove kinwell-local -s local`. If tools don't appear, `/mcp` shows the connection
+status and `whoami` explains sign-in problems.
 
 Code: `src/api.js` (Kinwell API client: sign-in, re-sign-in on expiry, readable errors),
 `src/tools.js` (tools per role), `src/index.js` (server, role detection, prompts).

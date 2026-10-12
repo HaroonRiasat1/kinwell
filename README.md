@@ -163,7 +163,12 @@ quicker manual check that prints raw responses.
 Desktop or Claude Code and ask *"How was Ammi's week?"*, *"Brief me for today's visits"* or *"Which
 flags need us first?"*. It signs in as one Kinwell account and offers only that role's tools (9 for
 families, 13 for nutritionists, 17 for admins); the API still checks every call. Setup, the tool list
-and tests: [mcp/README.md](mcp/README.md).
+and how to test it (automated tests, the MCP Inspector, or live in Claude Code against the
+local demo data): [mcp/README.md](mcp/README.md#test-it).
+
+```bash
+claude mcp add kinwell-local -e KINWELL_API_URL=http://localhost:4000/api -e KINWELL_EMAIL=hina.qureshi@kinwell.pk -e KINWELL_PASSWORD=kinwell-demo -- node "$PWD/mcp/src/index.js"
+```
 
 ## Search engines and link previews
 
