@@ -157,6 +157,14 @@ This runs the lab-report parser tests (`server/test/readReport.test.js`, no API 
 every role's main flows and the permission boundaries between them (`server/test/e2e.test.js`). `npm run test:smoke -w server` is a
 quicker manual check that prints raw responses.
 
+## MCP server (use Kinwell from Claude)
+
+`mcp/` is a [Model Context Protocol](https://modelcontextprotocol.io) server: connect it to Claude
+Desktop or Claude Code and ask *"How was Ammi's week?"*, *"Brief me for today's visits"* or *"Which
+flags need us first?"*. It signs in as one Kinwell account and offers only that role's tools (9 for
+families, 13 for nutritionists, 17 for admins); the API still checks every call. Setup, the tool list
+and tests: [mcp/README.md](mcp/README.md).
+
 ## Search engines and link previews
 
 - **The homepage is pre-rendered** at build time (`client/src/prerender.jsx`, `client/scripts/prerender.mjs`),

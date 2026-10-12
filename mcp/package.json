@@ -1,0 +1,22 @@
+{
+  "name": "@kinwell/mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for Kinwell: lets Claude (or any MCP client) work with Kinwell as a family member, nutritionist or admin.",
+  "type": "module",
+  "bin": {
+    "kinwell-mcp": "src/index.js"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node src/index.js",
+    "test": "node --test --test-concurrency=1 test/mcp.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.6"
+  }
+}
