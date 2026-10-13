@@ -5,6 +5,7 @@ import { MarkerCard } from '../family/DashboardPage.jsx';
 // Example data from the design (the Rahman family) so previews are real components, not screenshots.
 import { dashboard, labs } from '../../mocks/fixtures.js';
 import { ExplainerVideo } from './ExplainerVideo.jsx';
+import { McpFilm } from './McpFilm.jsx';
 import { usePageTitle } from '../../hooks/usePageTitle.js';
 import './landing.css';
 
@@ -402,6 +403,24 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section id="claude" className="lp-wrap stack" style={{ '--gap': '32px', paddingBottom: 'clamp(64px, 10vw, 128px)' }} aria-labelledby="claude-h">
+          <div className="stack lp-reveal" style={{ '--gap': '14px' }}>
+            <Kicker tone="teal">Works with Claude</Kicker>
+            <h2 id="claude-h" className="lp-h2">
+              Ask Kinwell from Claude.
+            </h2>
+            <p className="lp-lead">
+              Connect Kinwell to Claude Desktop or Claude Code and ask in plain words: “Brief me for today’s visits”, “How was Ammi’s week?”, “Which flags need us first?”. Claude only sees what your account can see, and asks before anything reaches a family.
+            </p>
+            <a className="lp-textlink" href="https://github.com/HaroonRiasat1/kinwell/blob/main/mcp/README.md" target="_blank" rel="noopener">
+              How to connect it <Icon name="arrowRight" size={16} />
+            </a>
+          </div>
+          <div className="lp-reveal">
+            <McpFilm />
+          </div>
+        </section>
+
         <section className="lp-wrap lp-reveal" style={{ paddingBottom: 'clamp(64px, 10vw, 128px)' }}>
           <figure className="lp-quote lp-glass" style={{ margin: 0 }}>
             <Kicker tone="teal">What a visit note looks like</Kicker>
@@ -457,6 +476,7 @@ export default function LandingPage() {
           <a href="#features">Features</a>
           <a href="#faq">Questions</a>
           <a href="/login">Sign in</a>
+          <a href="#claude">Use with Claude</a>
           <a href="/cookies">Cookies</a>
         </nav>
         <span>© {new Date().getFullYear()} Kinwell · Lahore</span>

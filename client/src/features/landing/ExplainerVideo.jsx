@@ -238,7 +238,8 @@ export const SCENES = [
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-export function ExplainerVideo({ autoPlay = true }) {
+/** Plays `scenes` like a short film. Used for the homepage walkthrough and the Claude (MCP) film. */
+export function ExplainerVideo({ scenes = SCENES, autoPlay = true, label = 'Walkthrough' }) {
   const [scene, setScene] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [playing, setPlaying] = useState(() => autoPlay && !reducedMotion());
@@ -270,9 +271,9 @@ export function ExplainerVideo({ autoPlay = true }) {
   }, [running]);
   useEffect(() => {
     if (elapsed < SCENE_MS) return;
-    setScene((s) => (s + 1) % SCENES.length);
+    setScene((s) => (s + 1) % scenes.length);
     setElapsed(0);
-  }, [elapsed]);
+  }, [elapsed, scenes.length]);
 
   const go = (i) => {
     setScene(i);
@@ -284,17 +285,17 @@ export function ExplainerVideo({ autoPlay = true }) {
     setPlaying(!playing);
   };
 
-  const { Scene, title, text } = SCENES[scene];
+  const { Scene, title, text } = scenes[scene];
   // Not started (or reduced motion): show the scene's finished state rather than a blank first
   // frame. Paused part-way: freeze it. The key re-mounts the scene so it replays when play starts.
   const still = !running && elapsed === 0;
   return (
-    <div className="ex" ref={root}>
+    <div className="ex" ref={root} role="region" aria-label={label}>
       <div className={`ex-stage lp-glass${still ? ' is-still' : running ? '' : ' is-paused'}`}>
         <div className="ex-stage__inner" key={`${scene}-${still}`} aria-hidden="true">
           <Scene />
         </div>
-        <button type="button" className="ex-play" onClick={toggle} aria-label={playing ? 'Pause the walkthrough' : 'Play the walkthrough'}>
+        <button type="button" className="ex-play" onClick={toggle} aria-label={`${playing ? 'Pause' : 'Play'}: ${label}`}>
           {playing ? (
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor" />
@@ -316,8 +317,8 @@ export function ExplainerVideo({ autoPlay = true }) {
         </div>
       </div>
 
-      <div className="ex-chapters" role="group" aria-label="Chapters">
-        {SCENES.map((s, i) => (
+      <div className="ex-chapters" role="group" aria-label={`${label} chapters`}>
+        {scenes.map((s, i) => (
           <button key={s.title} type="button" className={`ex-chapter${i === scene ? ' is-current' : ''}`} onClick={() => go(i)} aria-current={i === scene ? 'step' : undefined} aria-label={`Chapter ${i + 1}: ${s.title}`}>
             <span className="ex-chapter__bar">
               <span style={{ width: `${i < scene ? 100 : i === scene ? Math.min(100, (elapsed / SCENE_MS) * 100) : 0}%` }} />

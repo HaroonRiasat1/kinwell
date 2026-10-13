@@ -165,6 +165,8 @@ flags need us first?"*. It signs in as one Kinwell account and offers only that 
 families, 13 for nutritionists, 17 for admins); the API still checks every call. Setup, the tool list
 and how to test it (automated tests, the MCP Inspector, or live in Claude Code against the
 local demo data): [mcp/README.md](mcp/README.md#test-it).
+The homepage has a short film of it in action ("Kinwell in Claude", `#claude`,
+`client/src/features/landing/McpFilm.jsx`).
 
 ```bash
 claude mcp add kinwell-local -e KINWELL_API_URL=http://localhost:4000/api -e KINWELL_EMAIL=hina.qureshi@kinwell.pk -e KINWELL_PASSWORD=kinwell-demo -- node "$PWD/mcp/src/index.js"

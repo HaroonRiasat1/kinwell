@@ -150,6 +150,17 @@
   color: transparent;
 }
 
+.lp-textlink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--kw-teal-800);
+  text-underline-offset: 4px;
+}
+
 /* ----- Nav ----- */
 .lp-nav {
   position: sticky;
