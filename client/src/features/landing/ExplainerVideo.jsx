@@ -291,7 +291,7 @@ export function ExplainerVideo({ scenes = SCENES, autoPlay = true, label = 'Walk
   const still = !running && elapsed === 0;
   return (
     <div className="ex" ref={root} role="region" aria-label={label}>
-      <div className={`ex-stage lp-glass${still ? ' is-still' : running ? '' : ' is-paused'}`}>
+      <div className={`ex-stage${still ? ' is-still' : running ? '' : ' is-paused'}`}>
         <div className="ex-stage__inner" key={`${scene}-${still}`} aria-hidden="true">
           <Scene />
         </div>

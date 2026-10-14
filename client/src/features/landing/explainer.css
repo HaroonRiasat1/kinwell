@@ -1,4 +1,4 @@
-/* ===== "See it in action" film on the marketing site ===== */
+/* ===== Films on the website (walkthrough and Kinwell in Claude) ===== */
 .ex {
   display: grid;
   gap: 18px;
@@ -8,10 +8,11 @@
   /* 16:9 of the stage's width (the page is min(1200px, 100vw - 32px) wide), but never too short for
      the phone scenes. Not aspect-ratio: with a min-height it would widen the stage instead. */
   height: max(640px, min(675px, calc((100vw - 32px) * 9 / 16)));
+  position: relative;
   overflow: hidden;
-  border-radius: 32px;
-  background: radial-gradient(70% 90% at 15% 10%, rgba(198, 227, 218, 0.7), transparent 60%),
-    radial-gradient(60% 80% at 90% 90%, rgba(248, 210, 191, 0.65), transparent 60%), linear-gradient(155deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4));
+  border-radius: 12px;
+  background: var(--paper-2, #ebe3d5);
+  border: 1px solid var(--rule, #d6ccbc);
 }
 .ex-stage > .ex-stage__inner {
   position: absolute;
@@ -37,21 +38,19 @@
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px);
-  color: var(--kw-teal-800);
+  border: 1px solid var(--rule, #d6ccbc);
+  background: var(--card, #fffdf8);
+  color: var(--green-deep, #1b3f37);
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(31, 42, 40, 0.12);
 }
 .ex-play:hover {
   background: #fff;
 }
 .ex-play:focus-visible,
 .ex-chapter:focus-visible {
-  outline: 3px solid var(--kw-teal-700);
+  outline: 3px solid var(--terra, #b4532e);
   outline-offset: 3px;
 }
 
@@ -63,17 +62,16 @@
   min-height: 92px;
 }
 .ex-caption__n {
-  font-size: 44px;
-  font-weight: 800;
+  font-family: var(--serif, Georgia, serif);
+  font-size: 40px;
   line-height: 1;
-  letter-spacing: -0.05em;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(44, 110, 99, 0.5);
+  color: var(--terra, #b4532e);
 }
-.ex-caption h3 {
-  font-size: clamp(20px, 2.2vw, 26px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+.ex .ex-caption h3 {
+  font-family: var(--serif, Georgia, serif);
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 .ex-caption p {
   color: var(--kw-ink-2);
@@ -98,7 +96,7 @@
   border-radius: 8px;
 }
 .ex-chapter.is-current {
-  color: var(--kw-teal-800);
+  color: var(--green-deep, #1b3f37);
 }
 .ex-chapter__bar {
   height: 5px;
@@ -110,7 +108,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--kw-teal-700);
+  background: var(--green, #23574c);
   transition: width 0.1s linear;
 }
 .ex-chapter__label {

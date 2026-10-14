@@ -17,12 +17,13 @@ if (!shell.includes('<!--app-->')) throw new Error('dist/index.html has no <!--a
 // Signed-in areas: same shell, kept out of search results.
 await writeFile(dist('app.html'), shell.replace('<head>', '<head>\n    <meta name="robots" content="noindex" />').replace('<!--app-->', ''));
 
-// Homepage: real content, structured data, and the scroll-reveal content visible without JavaScript.
+// Homepage: real content and structured data.
 const jsonLd = structuredData(SITE_URL)
   .map((d) => `<script type="application/ld+json">${JSON.stringify(d).replace(/</g, '\\u003c')}</script>`)
   .join('\n    ');
-const noJs = '<noscript><style>.lp-reveal{opacity:1!important;transform:none!important}</style></noscript>';
-await writeFile(dist('index.html'), shell.replace('</head>', `    ${jsonLd}\n    ${noJs}\n  </head>`).replace('<!--app-->', renderHome()));
+// The homepage headline font, fetched early so the largest text paints sooner (homepage only).
+const preload = '<link rel="preload" href="/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin />';
+await writeFile(dist('index.html'), shell.replace('</head>', `    ${preload}\n    ${jsonLd}\n  </head>`).replace('<!--app-->', renderHome()));
 
 await writeFile(
   dist('robots.txt'),
