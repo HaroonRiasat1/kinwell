@@ -39,7 +39,7 @@ import {
   User,
   Visit,
 } from '../models/index.js';
-import { dateKeyDaysAgo, todayKey } from '../utils/time.js';
+import { dateKeyDaysAgo, shortDayLabel, todayKey, weekdayIndex } from '../utils/time.js';
 
 export const DEMO_PASSWORD = 'kinwell-demo';
 
@@ -226,12 +226,14 @@ async function seedRahmanFamily(hina) {
       });
       visitsByCode[v.id] = doc;
     }
+    // The next visit is always the coming Monday, so the demo works on any date.
+    const nextAt = lahoreTime(todayKey(new Date(Date.now() + (7 - weekdayIndex()) * DAY_MS)), V.next.time);
     await Visit.create({
       parent: parent.id,
       nutritionist: hina.id,
       status: 'scheduled',
-      scheduledFor: lahoreTime('2026-10-12', V.next.time),
-      date: V.next.date,
+      scheduledFor: nextAt,
+      date: shortDayLabel(nextAt),
       time: V.next.time,
       plan: V.next.plan,
     });

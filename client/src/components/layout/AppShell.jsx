@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Avatar, Icon, IconButton } from '../ui/index.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
 import { SignOutDialog } from './SignOutDialog.jsx';
+import { useTour } from '../tour/index.js';
 
 export function BrandMark({ to = '/', size = 36 }) {
   return (
@@ -19,8 +20,12 @@ export function BrandMark({ to = '/', size = 36 }) {
  * Signed-in frame shared by the family, nutritionist and admin areas.
  * Desktop: glass sidebar. Mobile (<900px): sticky header + bottom tab bar.
  */
+/** data-tour name for a nav item, used by the guided tours: "/family/:id/labs" → "nav-labs". */
+const tourName = (n) => n.tour ?? `nav-${n.to.split('/').pop()}`;
+
 export function AppShell({ nav, tabs, role, home = '/', footerAction, person, children }) {
   const [signingOut, setSigningOut] = useState(false);
+  const tour = useTour();
   const auth = useOptionalAuth();
   const navigate = useNavigate();
   const mobileTabs = tabs ?? nav.slice(0, 5);
@@ -36,7 +41,7 @@ export function AppShell({ nav, tabs, role, home = '/', footerAction, person, ch
         <BrandMark to={home} />
         {role && <span className={`kw-brand__role kw-brand__role--${role}`}>{role.toUpperCase()}</span>}
         {nav.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} className="kw-nav__item">
+          <NavLink key={n.to} to={n.to} end={n.end} className="kw-nav__item" data-tour={tourName(n)}>
             <span>{n.label}</span>
             {n.badge ? (
               <span className="kw-badge" aria-label={`${n.badge} unread`}>
@@ -46,6 +51,11 @@ export function AppShell({ nav, tabs, role, home = '/', footerAction, person, ch
           </NavLink>
         ))}
         <div style={{ flex: 1 }} />
+        {tour && (
+          <button type="button" className="kw-sidebar__cta kw-sidebar__tour" onClick={() => tour.start()} data-tour="tour-help">
+            <Icon name="help" size={18} /> Show me around
+          </button>
+        )}
         {footerAction}
         {person && (
           <div className="kw-sidebar__footer">
@@ -70,6 +80,7 @@ export function AppShell({ nav, tabs, role, home = '/', footerAction, person, ch
             <span style={{ fontWeight: 800, fontSize: 20 }}>Kinwell</span>
           </div>
           <div className="row" style={{ '--gap': '8px' }}>
+            {tour && <IconButton icon="help" label="Show me around" onClick={() => tour.start()} data-tour="tour-help" />}
             <IconButton icon="signOut" label="Sign out" onClick={() => setSigningOut(true)} />
             <IconButton icon="bell" label="Notifications" />
           </div>
@@ -79,7 +90,7 @@ export function AppShell({ nav, tabs, role, home = '/', footerAction, person, ch
 
         <nav aria-label="Sections" className="kw-tabbar" style={{ '--n': mobileTabs.length }}>
           {mobileTabs.map((t) => (
-            <NavLink key={t.to} to={t.to} end={t.end}>
+            <NavLink key={t.to} to={t.to} end={t.end} data-tour={tourName(t)}>
               {t.icon && <Icon name={t.icon} size={22} />}
               {t.short ?? t.label}
             </NavLink>

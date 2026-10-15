@@ -33,7 +33,7 @@ function VisitRow({ v, showDay }) {
         <StatusTag status={tone} label={label} />
       </span>
       {(v.state === 'now' || v.state === 'upcoming' || v.state === 'not_logged') && (
-        <Button size="sm" to={`/workspace/visit/${v.parent.id}`}>
+        <Button size="sm" to={`/workspace/visit/${v.parent.id}`} data-tour="start-visit">
           {v.state === 'not_logged' ? 'Add notes' : 'Start visit'}
         </Button>
       )}
@@ -54,7 +54,7 @@ export function TodayView({ data, inbox, onDecide }) {
         </Card>
       )}
       <div className="grid-auto" style={{ '--min': '380px' }}>
-        <Card pad={22}>
+        <Card pad={22} data-tour="today-visits">
           <h2 style={{ fontSize: 22, fontWeight: 800 }}>Today's visits</h2>
           {data.today.length === 0 && <p className="muted">No visits today.</p>}
           {data.today.map((v) => (

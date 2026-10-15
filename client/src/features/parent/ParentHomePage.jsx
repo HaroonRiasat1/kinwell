@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BrandMark, SignOutDialog } from '../../components/layout/index.js';
-import { Avatar, Button, ErrorState, Icon, Skeleton } from '../../components/ui/index.js';
+import { Avatar, Button, ErrorState, Icon, IconButton, Skeleton } from '../../components/ui/index.js';
 import { useApi } from '../../hooks/useApi.js';
 import { authApi, parentApi } from '../../api/endpoints.js';
 import { LanguageSwitcher, useI18n } from '../../i18n/index.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
 import { longDate } from '../../lib/dates.js';
+import { useTour } from '../../components/tour/index.js';
 
 function Task({ title, sub, detail, done, doneLabel, onToggle }) {
   const { t } = useI18n();
@@ -17,7 +18,7 @@ function Task({ title, sub, detail, done, doneLabel, onToggle }) {
         <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.4 }}>{title}</div>
         {detail && <div style={{ fontSize: 20, color: 'var(--kw-muted)' }}>{detail}</div>}
       </div>
-      <button type="button" className="kw-parent-task__btn" aria-pressed={done} onClick={onToggle}>
+      <button type="button" className="kw-parent-task__btn" aria-pressed={done} onClick={onToggle} data-tour="task-done">
         <Icon name="check" size={26} strokeWidth={3} />
         {done ? doneLabel : t('parent.done')}
       </button>
@@ -29,7 +30,7 @@ function Task({ title, sub, detail, done, doneLabel, onToggle }) {
  * The parent's own screen: one column, 24px text, a big button per task.
  * Shown in the parent's language; `familyPreview` shows it to a family member with a way back.
  */
-export function ParentHomeView({ data, onToggle, familyPreview, onBack, onSignOut, onLanguage }) {
+export function ParentHomeView({ data, onToggle, familyPreview, onBack, onSignOut, onLanguage, onTour }) {
   const { t, locale } = useI18n();
   const { parent, checklist, children, nextVisit, nutritionist, latestNote } = data;
   const done = checklist.filter((i) => i.done).length;
@@ -46,12 +47,17 @@ export function ParentHomeView({ data, onToggle, familyPreview, onBack, onSignOu
               {t('parent.familyView')}
             </Button>
           ) : (
-            <Button variant="glass" icon="signOut" onClick={onSignOut}>
-              {t('common.signOut')}
-            </Button>
+            <div className="row" style={{ '--gap': '8px', flexWrap: 'nowrap' }}>
+              {onTour && <IconButton icon="help" label={t('tour.showMe')} size={24} onClick={onTour} data-tour="tour-help" />}
+              <Button variant="glass" icon="signOut" onClick={onSignOut}>
+                {t('common.signOut')}
+              </Button>
+            </div>
           )}
         </div>
-        <LanguageSwitcher onChange={onLanguage} />
+        <div data-tour="language" style={{ alignSelf: 'flex-start' }}>
+          <LanguageSwitcher onChange={onLanguage} />
+        </div>
         <div className="stack" style={{ '--gap': '10px' }}>
           <div className="muted">{longDate(new Date(), locale)}</div>
           <h1>{t('parent.greeting', { name: parent.short })}</h1>
@@ -86,7 +92,7 @@ export function ParentHomeView({ data, onToggle, familyPreview, onBack, onSignOu
         )}
 
         {nextVisit && (
-          <section aria-labelledby="pv-visit" className="kw-parent-card">
+          <section aria-labelledby="pv-visit" className="kw-parent-card" data-tour="next-visit">
             <h2 id="pv-visit">{t('parent.nextVisit')}</h2>
             <div className="row" style={{ flexWrap: 'nowrap' }}>
               <Avatar name={nutritionist?.name} size={64} tone="sage" />
@@ -99,7 +105,7 @@ export function ParentHomeView({ data, onToggle, familyPreview, onBack, onSignOu
           </section>
         )}
 
-        <section className="stack" aria-labelledby="pv-call">
+        <section className="stack" aria-labelledby="pv-call" data-tour="call-family">
           <h2 id="pv-call">{t('parent.callFamily')}</h2>
           {children.map((c) =>
             c.phone ? (
@@ -128,8 +134,11 @@ export default function ParentHomePage({ familyPreview = false }) {
   const parentId = params.parentId ?? auth?.user?.parent;
   const [signingOut, setSigningOut] = useState(false);
   const { t, lang } = useI18n();
+  const tour = useTour();
   // Reload when the language changes so the server's content (meals, notes, dates) follows.
   const { data, error, reload, setData } = useApi(() => parentApi.home(parentId), [parentId, lang]);
+  const short = data?.parent?.short;
+  useEffect(() => tour?.setTourContext({ short }), [tour, short]);
   // Save the choice on the parent's account so it sticks on every device.
   const saveLanguage = (code) => {
     if (!familyPreview && auth?.user?.role === 'parent') authApi.setLanguage(code).catch(() => {});
@@ -172,6 +181,7 @@ export default function ParentHomePage({ familyPreview = false }) {
         onBack={() => navigate(`/family/${parentId}/dashboard`)}
         onSignOut={() => setSigningOut(true)}
         onLanguage={saveLanguage}
+        onTour={!familyPreview && tour ? () => tour.start('parent') : undefined}
       />
       <SignOutDialog
         message={t('signOut.parentMessage')}

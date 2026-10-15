@@ -22,7 +22,7 @@ const statusIcon = { attention: 'alert', watch: 'eye', normal: 'checkCircle' };
 
 function HealthAtAGlance({ parent, nutritionist, onMessage }) {
   return (
-    <Card aria-labelledby="glance-h">
+    <Card aria-labelledby="glance-h" data-tour="glance">
       <Kicker id="glance-h">Health at a glance</Kicker>
       <div className="stack" style={{ '--gap': '10px', alignItems: 'flex-start' }}>
         <StatusTag status={parent.overall} size="lg" />
@@ -67,7 +67,7 @@ function TodaysPlan({ parent, checklist, onToggle }) {
     return `${list.filter((i) => i.done).length}/${list.length}`;
   };
   return (
-    <Card aria-labelledby="today-h">
+    <Card aria-labelledby="today-h" data-tour="today">
       <Kicker id="today-h">Today's plan</Kicker>
       <div className="row" style={{ '--gap': '18px', flexWrap: 'nowrap' }}>
         <ProgressRing done={done} total={checklist.length} />
@@ -101,7 +101,7 @@ function TodaysPlan({ parent, checklist, onToggle }) {
 
 function Alerts({ alerts, onAction }) {
   return (
-    <Card aria-labelledby="alerts-h">
+    <Card aria-labelledby="alerts-h" data-tour="alerts">
       <div className="row" style={{ '--gap': '10px' }}>
         <Kicker id="alerts-h">Alerts</Kicker>
         <span className="kw-count">{alerts.length}</span>

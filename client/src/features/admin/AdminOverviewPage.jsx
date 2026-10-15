@@ -72,7 +72,7 @@ export function AdminOverviewView({ data, flags, setFlags, tab, onTab }) {
   const urgent = open.filter((f) => f.status === 'attention').length;
   return (
     <div className="stack" style={{ '--gap': '20px' }}>
-      <div className="grid-auto" style={{ '--min': '190px', '--gap': '14px' }}>
+      <div className="grid-auto" style={{ '--min': '190px', '--gap': '14px' }} data-tour="overview-stats">
         {data.stats.map((s) =>
           s.key === 'flags' ? (
             <Stat key={s.key} s={{ ...s, status: urgent ? 'attention' : 'normal' }} value={String(open.length)} note={`${urgent} ${urgent === 1 ? 'needs' : 'need'} action today`} />
@@ -82,7 +82,7 @@ export function AdminOverviewView({ data, flags, setFlags, tab, onTab }) {
         )}
       </div>
 
-      <Card pad={22}>
+      <Card pad={22} data-tour="needs-review">
         <div className="row row--between">
           <div className="row" style={{ '--gap': '10px' }}>
             <h2 style={{ fontSize: 22, fontWeight: 800 }}>Needs review</h2>
@@ -93,7 +93,7 @@ export function AdminOverviewView({ data, flags, setFlags, tab, onTab }) {
         <FlagList flags={visible} setFlags={setFlags} emptyText={tab === 'open' ? 'All caught up. Nothing needs review right now.' : 'Nothing resolved yet.'} />
       </Card>
 
-      <div className="grid-auto" style={{ '--min': '260px', '--gap': '14px' }}>
+      <div className="grid-auto" style={{ '--min': '260px', '--gap': '14px' }} data-tour="queues">
         {[
           ['/admin/queues/lab-uploads', 'file', 'Unreadable lab reports', data.queues.labUploads],
           ['/admin/queues/access-requests', 'message', 'Requests to join a family', data.queues.accessRequests],

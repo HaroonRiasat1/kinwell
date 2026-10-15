@@ -83,6 +83,7 @@ export function MessagesView({ threads, activeParentId, onThread, thread, draft,
           <div ref={end} />
         </div>
         <form
+          data-tour="composer"
           className="row"
           style={{ padding: 16, borderTop: '1px solid var(--kw-rule)', flexWrap: 'nowrap' }}
           onSubmit={(e) => {

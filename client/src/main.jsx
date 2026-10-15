@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { I18nProvider } from './i18n/index.js';
 import { ToastProvider } from './components/ui/index.js';
 import App from './App.jsx';
+import { TourProvider } from './components/tour/index.js';
 import './styles/index.css';
 
 createRoot(document.getElementById('root')).render(
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <AuthProvider>
           <ToastProvider>
-            <App />
+            <TourProvider>
+              <App />
+            </TourProvider>
           </ToastProvider>
         </AuthProvider>
       </BrowserRouter>

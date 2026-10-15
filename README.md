@@ -210,6 +210,18 @@ device**: the file itself is never uploaded.
 
 Results are graded with general adult ranges; have a clinician review `catalogue.js` before real use.
 
+## Guided tours
+
+Each role gets a short tour the first time they reach their home screen, and again whenever they
+press **Show me around** (the ? button). The page dims, the control being explained is spotlit,
+"tap here" steps show an animated pointer and move on when the real button is tapped, and the tour
+follows across pages. Steps whose control isn't on screen (a sidebar button on a phone) are skipped.
+
+- Tours: family (10 steps), parent (6, in Urdu or English), nutritionist (6), admin (7), in
+  `client/src/components/tour/tours.js`. Targets are marked in the pages with `data-tour="…"`.
+- Engine: `client/src/components/tour/TourProvider.jsx` (keyboard: Esc to close, ← → to move;
+  reduced-motion friendly). Seen tours are remembered per account on the device.
+
 ## Visit readings
 
 Readings entered at a home visit are checked for typos and graded normal / watch / needs attention

@@ -1,0 +1,206 @@
+/* ===== Guided tour: dimmed page, a spotlight on one control, a card that explains it ===== */
+.kw-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+}
+.kw-tour__block {
+  position: fixed;
+  pointer-events: auto;
+}
+
+.kw-tour__spot {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(16, 26, 24, 0.62);
+  transition: top 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.kw-tour__spot:not(.is-empty)::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  border: 3px solid #f2c36b;
+  animation: kw-tour-pulse 1.8s ease-out infinite;
+}
+.kw-tour__spot.is-tap::after {
+  border-color: #fff;
+}
+@keyframes kw-tour-pulse {
+  0% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The "tap here" pointer: an arrow that presses the control, with a ripple. */
+.kw-tour__pointer {
+  position: fixed;
+  width: 0;
+  height: 0;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+.kw-tour__pointer svg {
+  position: absolute;
+  left: -6px;
+  top: -3px;
+  animation: kw-tour-tap 1.6s ease-in-out infinite;
+}
+.kw-tour__ripple {
+  position: absolute;
+  left: -16px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  animation: kw-tour-ripple 1.6s ease-out infinite;
+}
+@keyframes kw-tour-tap {
+  0%,
+  100% {
+    transform: translate(14px, 18px);
+  }
+  45% {
+    transform: translate(0, 0) scale(0.92);
+  }
+  55% {
+    transform: translate(0, 0) scale(0.92);
+  }
+}
+@keyframes kw-tour-ripple {
+  0%,
+  40% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* The card */
+.kw-tour__card {
+  position: fixed;
+  width: min(380px, calc(100vw - 24px));
+  padding: 18px 20px 16px;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--kw-ink);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease, top 0.3s ease, left 0.3s ease;
+}
+.kw-tour.is-ready .kw-tour__card {
+  opacity: 1;
+  transform: none;
+}
+.kw-tour__card.is-sheet {
+  width: auto;
+}
+.kw-tour__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.kw-tour__count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kw-muted);
+}
+.kw-tour__skip {
+  border: 0;
+  background: none;
+  padding: 6px 2px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--kw-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.kw-tour__bar {
+  height: 4px;
+  margin: 8px 0 14px;
+  border-radius: 999px;
+  background: var(--kw-rule);
+  overflow: hidden;
+}
+.kw-tour__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--kw-teal-700);
+  transition: width 0.3s ease;
+}
+.kw-tour__card h2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+  outline: none;
+}
+.kw-tour__card p {
+  margin-top: 6px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--kw-ink-2);
+}
+.kw-tour__hint {
+  font-weight: 700;
+  color: var(--kw-teal-800) !important;
+}
+.kw-tour__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.kw-tour__skip:focus-visible,
+.kw-tour__actions .kw-btn:focus-visible {
+  outline: 3px solid var(--kw-teal-700);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kw-tour__spot,
+  .kw-tour__card,
+  .kw-tour__bar span {
+    transition: none;
+  }
+  .kw-tour__spot::after,
+  .kw-tour__pointer svg,
+  .kw-tour__ripple {
+    animation: none;
+  }
+  .kw-tour__pointer svg {
+    transform: translate(4px, 6px);
+  }
+}
+
+/* "Show me around" in the sidebar */
+.kw-sidebar__tour {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 6px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

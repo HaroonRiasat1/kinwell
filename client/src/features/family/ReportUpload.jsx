@@ -157,7 +157,7 @@ export function ReportUploadView({ state, fileName, progress, step, review, setR
           </div>
         </Card>
       )}
-      <Card variant="dashed" pad="18px 20px" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+      <Card variant="dashed" data-tour="add-report" pad="18px 20px" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
         <span className="kw-icon-tile">
           <Icon name="upload" size={24} />
         </span>

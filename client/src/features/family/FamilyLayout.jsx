@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { AppShell, PageHeader, ParentSwitcher } from '../../components/layout/index.js';
 import { ErrorState, Skeleton } from '../../components/ui/index.js';
@@ -7,6 +7,7 @@ import { parentApi } from '../../api/endpoints.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
 import { todayGreeting } from '../../lib/dates.js';
 import { ParentSignInDialog } from './ParentSignInHelp.jsx';
+import { useTour } from '../../components/tour/index.js';
 
 const SECTIONS = [
   ['dashboard', 'Dashboard', 'home', 'Home'],
@@ -34,6 +35,8 @@ const titleFor = (section, p) =>
 export function FamilyShell({ parents, parent, section, user, onSelectParent, children }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const base = `/family/${parent.id}`;
+  const tour = useTour();
+  useEffect(() => tour?.setTourContext({ parentId: parent.id, short: parent.short }), [tour, parent.id, parent.short]);
   const nav = SECTIONS.map(([s, label, icon, short]) => ({ to: `${base}/${s}`, label, icon, short, badge: s === 'messages' ? 2 : 0 }));
   const tabs = nav.filter((n) => n.icon);
   const sub =
@@ -51,7 +54,7 @@ export function FamilyShell({ parents, parent, section, user, onSelectParent, ch
           <Link className="kw-sidebar__cta" to={`${base}/simple`}>
             Open {parent.short}'s simple view
           </Link>
-          <button type="button" className="kw-sidebar__cta" style={{ marginTop: 6, cursor: 'pointer', textAlign: 'left' }} onClick={() => setHelpOpen(true)}>
+          <button type="button" className="kw-sidebar__cta" style={{ marginTop: 6, cursor: 'pointer', textAlign: 'left' }} onClick={() => setHelpOpen(true)} data-tour="parent-signin">
             Help {parent.short} sign in
           </button>
         </>
