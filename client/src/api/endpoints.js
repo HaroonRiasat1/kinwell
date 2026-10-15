@@ -97,5 +97,6 @@ export const adminApi = {
 
 export const onboardingApi = {
   nutritionists: () => api.get('/onboarding/nutritionists'),
+  areas: () => api.get('/onboarding/areas'),
   complete: (body) => api.post('/onboarding', body),
 };

@@ -7,6 +7,7 @@ import { useApi } from '../../hooks/useApi.js';
 import { onboardingApi } from '../../api/endpoints.js';
 import { useOptionalAuth } from '../../context/AuthContext.jsx';
 import { usePageTitle } from '../../hooks/usePageTitle.js';
+import './onboarding.css';
 
 const CITIES = [
   ['London', 'London, United Kingdom (GMT+1)', 'Europe/London'],
@@ -17,12 +18,28 @@ const CITIES = [
   ['Lahore', 'Lahore, Pakistan (GMT+5)', 'Asia/Karachi'],
 ];
 
+// Home visits run in Lahore today; the areas come from the admin's service areas.
+export const VISIT_CITY = 'Lahore';
+const OTHER = '__other';
+const MAX_PARENTS = 4;
+
+const emptyParent = (callThem = '') => ({ name: '', callThem, age: '', cityChoice: VISIT_CITY, city: '', areaChoice: '', area: '' });
+
+/** What's missing for one parent, or null when they're ready (blank rows are simply skipped). */
+export function parentProblem(p) {
+  const named = p.name.trim().length >= 2;
+  const age = Number(p.age);
+  if (!named && !p.age) return 'empty';
+  if (!named) return 'Add their full name.';
+  if (!p.age) return 'Add their age.';
+  if (age < 40 || age > 120) return 'Kinwell is for parents aged 40 or over. Check the age.';
+  if (p.cityChoice === OTHER && !p.city.trim()) return 'Add the city they live in.';
+  return null;
+}
+
 export const initialOnboarding = () => ({
   you: { name: '', email: '', password: '', city: 'London' },
-  parents: [
-    { name: '', callThem: 'Ammi', age: '', area: '' },
-    { name: '', callThem: 'Abbu', age: '', area: '' },
-  ],
+  parents: [emptyParent('Ammi'), emptyParent('Abbu')],
   invites: [
     { email: '', access: 'edit' },
     { email: '', access: 'view' },
@@ -34,13 +51,16 @@ export const initialOnboarding = () => ({
 // Fields required before leaving each step.
 const STEP_VALID = [
   (f) => f.you.name.trim().length > 1 && /\S+@\S+\.\S+/.test(f.you.email) && f.you.password.length >= 8,
-  (f) => f.parents.some((p) => p.name.trim() && Number(p.age) >= 40),
+  (f) => f.parents.some((p) => parentProblem(p) === null) && f.parents.every((p) => [null, 'empty'].includes(parentProblem(p))),
   () => true,
   () => true,
   () => true,
 ];
 
-export function OnboardingView({ step, form, setForm, nutritionists, onBack, onNext, busy, error, onFinish }) {
+// Said under Continue while it is disabled, so it's clear what is missing.
+const STEP_HINT = ['Add your name, a valid email and a password of at least 8 characters to continue.', 'Add a full name and age (40 or over) for at least one parent to continue.'];
+
+export function OnboardingView({ step, form, setForm, nutritionists, areas = [], onBack, onNext, busy, error, onFinish }) {
   const set = (path, value) =>
     setForm((f) => {
       const next = structuredClone(f);
@@ -70,7 +90,7 @@ export function OnboardingView({ step, form, setForm, nutritionists, onBack, onN
       <div className="stack" style={{ '--gap': '20px', maxWidth: 720 }}>
         {step < 5 && (
           <div className="kw-meter" role="img" aria-label={`Step ${step + 1} of 5`}>
-            <span style={{ width: `${(step / 5) * 100}%` }} />
+            <span style={{ width: `${((step + 1) / 5) * 100}%` }} />
           </div>
         )}
         <Card pad={28}>
@@ -89,14 +109,64 @@ export function OnboardingView({ step, form, setForm, nutritionists, onBack, onN
             <>
               <div className="kw-kicker kw-kicker--teal">Step 2</div>
               <h2 style={{ fontSize: 28, fontWeight: 800 }}>Who are we looking after?</h2>
-              {form.parents.map((p, i) => (
-                <div key={i} className="grid-auto" style={{ '--min': '180px', '--gap': '12px', paddingTop: 14, borderTop: '1px solid var(--kw-rule)' }}>
-                  <Field label="Full name" value={p.name} onChange={(e) => set(['parents', i, 'name'], e.target.value)} />
-                  <Field label="What you call them" value={p.callThem} onChange={(e) => set(['parents', i, 'callThem'], e.target.value)} />
-                  <Field label="Age" inputMode="numeric" value={p.age} onChange={(e) => set(['parents', i, 'age'], e.target.value.replace(/\D/g, ''))} />
-                  <Field label="Area of Lahore" placeholder="Model Town" value={p.area} onChange={(e) => set(['parents', i, 'area'], e.target.value)} />
-                </div>
-              ))}
+              <p className="muted">Add the parents Kinwell will look after. A name and age are enough for now; the nutritionist goes through the rest at the first visit.</p>
+              {form.parents.map((p, i) => {
+                const problem = parentProblem(p);
+                const ageError = p.age && (Number(p.age) < 40 || Number(p.age) > 120) ? 'Enter an age of 40 or over.' : null;
+                const update = (key) => (e) => set(['parents', i, key], e.target.value);
+                return (
+                  <fieldset key={i} className="kw-onb-parent">
+                    <legend>
+                      Parent {i + 1}
+                      {p.callThem.trim() && <span className="muted"> · {p.callThem.trim()}</span>}
+                    </legend>
+                    {form.parents.length > 1 && (
+                      <button type="button" className="kw-onb-parent__remove" onClick={() => setForm((f) => ({ ...f, parents: f.parents.filter((_, j) => j !== i) }))}>
+                        Remove
+                      </button>
+                    )}
+                    <div className="grid-auto" style={{ '--min': '200px', '--gap': '12px' }}>
+                      <Field label="Full name" autoComplete="off" value={p.name} onChange={update('name')} />
+                      <Field label="What you call them" hint="Ammi, Abbu, Nani…" value={p.callThem} onChange={update('callThem')} />
+                      <Field label="Age" inputMode="numeric" maxLength={3} hint={ageError ? undefined : '40 or over'} error={ageError} value={p.age} onChange={(e) => set(['parents', i, 'age'], e.target.value.replace(/\D/g, ''))} />
+                      <Field
+                        as="select"
+                        label="City"
+                        options={[
+                          { value: VISIT_CITY, label: VISIT_CITY },
+                          { value: OTHER, label: 'Another city' },
+                        ]}
+                        value={p.cityChoice}
+                        onChange={update('cityChoice')}
+                      />
+                      {p.cityChoice === VISIT_CITY ? (
+                        <Field
+                          as="select"
+                          label="Area"
+                          options={[{ value: '', label: 'Choose an area' }, ...areas.map((a) => ({ value: a, label: a })), { value: OTHER, label: 'Another area' }]}
+                          value={p.areaChoice}
+                          onChange={update('areaChoice')}
+                        />
+                      ) : (
+                        <Field label="Which city?" placeholder="e.g. Karachi" value={p.city} onChange={update('city')} />
+                      )}
+                      {p.cityChoice === VISIT_CITY && p.areaChoice === OTHER && <Field label="Which area?" placeholder="e.g. Shadman" value={p.area} onChange={update('area')} />}
+                    </div>
+                    {p.cityChoice === OTHER && (
+                      <p className="kw-onb-note">
+                        Home visits are only in {VISIT_CITY} at the moment, so we can’t visit {p.city.trim() || 'other cities'} yet. You can still set up your family and keep {p.callThem.trim() || 'their'}
+                        {p.callThem.trim() ? '’s' : ''} lab results and updates in one place.
+                      </p>
+                    )}
+                    {problem && problem !== 'empty' && !ageError && <p className="kw-onb-parent__todo">{problem}</p>}
+                  </fieldset>
+                );
+              })}
+              {form.parents.length < MAX_PARENTS && (
+                <Button variant="glass" icon="plus" style={{ alignSelf: 'flex-start' }} onClick={() => setForm((f) => ({ ...f, parents: [...f.parents, emptyParent()] }))}>
+                  Add another parent
+                </Button>
+              )}
             </>
           )}
           {step === 2 && (
@@ -202,6 +272,11 @@ export function OnboardingView({ step, form, setForm, nutritionists, onBack, onN
             </Button>
           </div>
         )}
+        {step < 5 && !STEP_VALID[step](form) && STEP_HINT[step] && (
+          <p className="muted text-sm" role="status" style={{ textAlign: 'right' }}>
+            {STEP_HINT[step]}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -215,6 +290,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState(null);
   const [session, setSession] = useState(null);
   const nutritionists = useApi(() => onboardingApi.nutritionists(), []);
+  const areas = useApi(() => onboardingApi.areas(), []);
   const auth = useOptionalAuth();
   const navigate = useNavigate();
   const list = nutritionists.data ?? [];
@@ -226,7 +302,15 @@ export default function OnboardingPage() {
       const city = CITIES.find(([v]) => v === form.you.city);
       const body = {
         you: { ...form.you, timezone: city?.[2] },
-        parents: form.parents.filter((p) => p.name.trim()).map((p) => ({ ...p, age: Number(p.age), city: 'Lahore' })),
+        parents: form.parents
+          .filter((p) => parentProblem(p) === null)
+          .map((p) => ({
+            name: p.name.trim(),
+            callThem: p.callThem.trim(),
+            age: Number(p.age),
+            city: p.cityChoice === VISIT_CITY ? VISIT_CITY : p.city.trim(),
+            area: p.cityChoice !== VISIT_CITY ? undefined : p.areaChoice === OTHER ? p.area.trim() || undefined : p.areaChoice || undefined,
+          })),
         invites: form.invites.filter((i) => i.email.trim()),
         nutritionistId: form.nutritionistId ?? list[0]?.id,
         health: form.health,
@@ -246,6 +330,7 @@ export default function OnboardingPage() {
       form={form}
       setForm={setForm}
       nutritionists={list}
+      areas={areas.data ?? []}
       busy={busy}
       error={error}
       onBack={() => setStep((s) => Math.max(0, s - 1))}

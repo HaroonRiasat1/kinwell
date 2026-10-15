@@ -1,4 +1,4 @@
-import { Family, Parent, User } from '../models/index.js';
+import { Family, Parent, ServiceArea, User } from '../models/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { signToken } from '../middleware/auth.js';
 import { newInviteToken } from './admin/families.js';
@@ -13,6 +13,11 @@ export async function listNutritionists() {
     areas: (u.nutritionist?.areas ?? []).join(', '),
     next: u.nutritionist?.nextOpening ? `Next opening: ${u.nutritionist.nextOpening}` : '',
   }));
+}
+
+/** The areas home visits cover (managed by admins in Settings), for the sign-up form. */
+export async function listAreas() {
+  return (await ServiceArea.find().sort('name')).map((a) => a.name);
 }
 
 const keyFor = (name) => name.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '') || 'parent';

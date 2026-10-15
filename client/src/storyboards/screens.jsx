@@ -264,8 +264,8 @@ export const AdminSettings = () => (
 const FILLED = () => {
   const f = initialOnboarding();
   f.you = { name: 'Sana Rahman', email: 'sana.rahman@gmail.com', password: 'a-long-password', city: 'London' };
-  f.parents[0] = { name: 'Fatima Rahman', callThem: 'Ammi', age: '72', area: 'Model Town' };
-  f.parents[1] = { name: 'Tariq Rahman', callThem: 'Abbu', age: '76', area: 'Model Town' };
+  f.parents[0] = { ...f.parents[0], name: 'Fatima Rahman', age: '72', areaChoice: 'Model Town' };
+  f.parents[1] = { ...f.parents[1], name: 'Tariq Rahman', age: '76', areaChoice: 'Model Town' };
   f.invites[0].email = 'bilal.rahman@gmail.com';
   return f;
 };
@@ -278,6 +278,7 @@ export function Onboarding({ step: initial = 0 }) {
       form={form}
       setForm={setForm}
       nutritionists={fx.nutritionistsForOnboarding}
+      areas={['Cantt', 'DHA', 'Gulberg', 'Johar Town', 'Model Town']}
       busy={false}
       error={null}
       onBack={() => setStep((s) => Math.max(0, s - 1))}

@@ -313,4 +313,20 @@ describe('onboarding', () => {
     assert.equal(parents.length, 1);
     assert.equal((await call('/onboarding', { method: 'POST', body })).status, 400);
   });
+  test('the sign-up form gets the served areas, and a parent in another city keeps that city', async () => {
+    const areas = await ok('/onboarding/areas');
+    assert.ok(areas.includes('Model Town'));
+    const body = {
+      you: { name: 'Abroad Family', email: 'abroad.family@example.com', password: 'long-enough-1', city: 'London' },
+      parents: [
+        { name: 'Lahore Parent', callThem: 'Ammi', age: 70, city: 'Lahore', area: 'Model Town' },
+        { name: 'Karachi Parent', callThem: 'Abbu', age: 74, city: 'Karachi' },
+      ],
+    };
+    const s = await ok('/onboarding', { method: 'POST', body });
+    const parents = await ok('/parents', { token: s.token });
+    const byName = Object.fromEntries(parents.map((p) => [p.fullName, p]));
+    assert.equal(byName['Lahore Parent'].city, 'Lahore');
+    assert.equal(byName['Karachi Parent'].city, 'Karachi');
+  });
 });

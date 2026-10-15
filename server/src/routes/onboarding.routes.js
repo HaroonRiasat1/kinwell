@@ -8,6 +8,7 @@ const c = wrapAll(raw);
 const router = Router();
 
 router.get('/nutritionists', c.nutritionists);
+router.get('/areas', c.areas);
 router.post('/', validate(s.onboardingSchema), c.complete);
 
 export default router;

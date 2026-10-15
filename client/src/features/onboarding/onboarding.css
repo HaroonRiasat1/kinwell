@@ -1,0 +1,46 @@
+/* ===== Sign-up: one block per parent ===== */
+.kw-onb-parent {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding: 16px 0 6px;
+  border: 0;
+  border-top: 1px solid var(--kw-rule);
+  display: grid;
+  gap: 10px;
+}
+.kw-onb-parent legend {
+  float: left; /* keeps the legend inside the block, like a heading */
+  width: 100%;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+.kw-onb-parent__remove {
+  position: absolute;
+  top: 16px;
+  right: 0;
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--kw-attention);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.kw-onb-parent__todo {
+  font-size: 15px;
+  font-weight: 700;
+  color: #8a5a12;
+}
+.kw-onb-note {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff6e5;
+  color: #6b4a10;
+  font-size: 15px;
+  line-height: 1.45;
+}
