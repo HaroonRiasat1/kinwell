@@ -222,7 +222,7 @@ export function DashboardSkeleton({ parent }) {
 
 const EMPTY_STEPS = [
   { title: 'Upload a lab report', text: "A PDF or a clear photo works. We'll pull out the numbers for you.", cta: 'Upload report', to: 'labs', variant: 'cta' },
-  { title: 'Book the first home visit', text: 'Your nutritionist has openings next week in Lahore.', cta: 'See times', to: 'visits', variant: 'glass' },
+  { title: 'Book the first home visit', text: 'Your nutritionist has openings next week.', cta: 'See times', to: 'visits', variant: 'glass' },
   { title: 'Add medicines & allergies', text: 'So supplements can be checked as safe alongside them.', cta: 'Add details', to: 'profile', variant: 'glass' },
 ];
 

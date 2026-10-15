@@ -90,12 +90,14 @@ export const nutritionistCreateSchema = z.object({
   phone: z.string().trim().optional(),
   credential: z.string().trim().min(2, 'Add their qualification'),
   languages: z.string().trim().optional().default(''),
+  city: z.string().trim().min(2).default('Lahore'),
   areas: z.array(z.string().trim().min(1)).min(1, 'Choose at least one area'),
 });
 export const nutritionistUpdateSchema = z.object({
   phone: z.string().trim().optional(),
   credential: z.string().trim().optional(),
   languages: z.string().trim().optional(),
+  city: z.string().trim().min(2).optional(),
   areas: z.array(z.string().trim().min(1)).optional(),
   availability: z.enum(['active', 'on_leave']).optional(),
   leaveUntil: optionalDate,
@@ -104,4 +106,4 @@ export const nutritionistUpdateSchema = z.object({
 export const activeSchema = z.object({ active: z.boolean() });
 export const labActionSchema = z.object({ action: z.enum(['retake', 'typed_in', 'dismiss']) });
 export const accessDecisionSchema = z.object({ decision: z.enum(['approve', 'decline']) });
-export const areaSchema = z.object({ id: objectId.optional(), name: z.string().trim().min(2), capacity: z.coerce.number().int().min(0).max(10000) });
+export const areaSchema = z.object({ id: objectId.optional(), city: z.string().trim().min(2).default('Lahore'), name: z.string().trim().min(2), capacity: z.coerce.number().int().min(0).max(10000) });

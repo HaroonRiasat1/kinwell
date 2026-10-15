@@ -16,14 +16,19 @@ const CITIES = [
   ['Riyadh', 'Riyadh, Saudi Arabia (GMT+3)', 'Asia/Riyadh'],
   ['Houston', 'Houston, USA (GMT−5)', 'America/Chicago'],
   ['Lahore', 'Lahore, Pakistan (GMT+5)', 'Asia/Karachi'],
+  ['Karachi', 'Karachi, Pakistan (GMT+5)', 'Asia/Karachi'],
+  ['Islamabad', 'Islamabad, Pakistan (GMT+5)', 'Asia/Karachi'],
 ];
 
-// Home visits run in Lahore today; the areas come from the admin's service areas.
-export const VISIT_CITY = 'Lahore';
+// Cities with home visits and their areas come from the admin's service areas (Settings).
 const OTHER = '__other';
+const listCities = (names) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names[0] ?? '');
 const MAX_PARENTS = 4;
 
-const emptyParent = (callThem = '') => ({ name: '', callThem, age: '', cityChoice: VISIT_CITY, city: '', areaChoice: '', area: '' });
+const emptyParent = (callThem = '') => ({ name: '', callThem, age: '', cityChoice: '', city: '', areaChoice: '', area: '' });
+
+/** The city a parent lives in: one Kinwell serves, or the one typed in. */
+export const cityOf = (p) => (p.cityChoice === OTHER ? p.city.trim() : p.cityChoice);
 
 /** What's missing for one parent, or null when they're ready (blank rows are simply skipped). */
 export function parentProblem(p) {
@@ -33,6 +38,7 @@ export function parentProblem(p) {
   if (!named) return 'Add their full name.';
   if (!p.age) return 'Add their age.';
   if (age < 40 || age > 120) return 'Kinwell is for parents aged 40 or over. Check the age.';
+  if (!p.cityChoice) return 'Choose the city they live in.';
   if (p.cityChoice === OTHER && !p.city.trim()) return 'Add the city they live in.';
   return null;
 }
@@ -58,7 +64,7 @@ const STEP_VALID = [
 ];
 
 // Said under Continue while it is disabled, so it's clear what is missing.
-const STEP_HINT = ['Add your name, a valid email and a password of at least 8 characters to continue.', 'Add a full name and age (40 or over) for at least one parent to continue.'];
+const STEP_HINT = ['Add your name, a valid email and a password of at least 8 characters to continue.', 'Add a full name, age (40 or over) and city for at least one parent to continue.'];
 
 export function OnboardingView({ step, form, setForm, nutritionists, areas = [], onBack, onNext, busy, error, onFinish }) {
   const set = (path, value) =>
@@ -70,6 +76,11 @@ export function OnboardingView({ step, form, setForm, nutritionists, areas = [],
       return next;
     });
   const first = form.parents.find((p) => p.name.trim()) ?? form.parents[0];
+  const served = areas.map((c) => c.city);
+  const areasIn = (city) => areas.find((c) => c.city === city)?.areas ?? [];
+  // Step 4 offers nutritionists from the first parent's city.
+  const firstCity = cityOf(form.parents.find((p) => parentProblem(p) === null) ?? first);
+  const local = nutritionists.filter((n) => n.city === firstCity);
 
   return (
     <div className="kw-backdrop" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: 32, padding: 'clamp(20px, 4vw, 48px)', alignItems: 'start' }}>
@@ -109,7 +120,7 @@ export function OnboardingView({ step, form, setForm, nutritionists, areas = [],
             <>
               <div className="kw-kicker kw-kicker--teal">Step 2</div>
               <h2 style={{ fontSize: 28, fontWeight: 800 }}>Who are we looking after?</h2>
-              <p className="muted">Add the parents Kinwell will look after. A name and age are enough for now; the nutritionist goes through the rest at the first visit.</p>
+              <p className="muted">Add the parents Kinwell will look after. A name, age and city are enough for now; the nutritionist goes through the rest at the first visit.</p>
               {form.parents.map((p, i) => {
                 const problem = parentProblem(p);
                 const ageError = p.age && (Number(p.age) < 40 || Number(p.age) > 120) ? 'Enter an age of 40 or over.' : null;
@@ -132,29 +143,32 @@ export function OnboardingView({ step, form, setForm, nutritionists, areas = [],
                       <Field
                         as="select"
                         label="City"
-                        options={[
-                          { value: VISIT_CITY, label: VISIT_CITY },
-                          { value: OTHER, label: 'Another city' },
-                        ]}
+                        options={[{ value: '', label: 'Choose a city' }, ...served.map((c) => ({ value: c, label: c })), { value: OTHER, label: 'Another city' }]}
                         value={p.cityChoice}
-                        onChange={update('cityChoice')}
+                        onChange={(e) => setForm((f) => {
+                          const next = structuredClone(f);
+                          Object.assign(next.parents[i], { cityChoice: e.target.value, areaChoice: '', area: '' });
+                          return next;
+                        })}
                       />
-                      {p.cityChoice === VISIT_CITY ? (
-                        <Field
-                          as="select"
-                          label="Area"
-                          options={[{ value: '', label: 'Choose an area' }, ...areas.map((a) => ({ value: a, label: a })), { value: OTHER, label: 'Another area' }]}
-                          value={p.areaChoice}
-                          onChange={update('areaChoice')}
-                        />
+                      {p.cityChoice === OTHER ? (
+                        <Field label="Which city?" placeholder="e.g. Multan" value={p.city} onChange={update('city')} />
                       ) : (
-                        <Field label="Which city?" placeholder="e.g. Karachi" value={p.city} onChange={update('city')} />
+                        p.cityChoice && (
+                          <Field
+                            as="select"
+                            label="Area"
+                            options={[{ value: '', label: 'Choose an area' }, ...areasIn(p.cityChoice).map((a) => ({ value: a, label: a })), { value: OTHER, label: 'Another area' }]}
+                            value={p.areaChoice}
+                            onChange={update('areaChoice')}
+                          />
+                        )
                       )}
-                      {p.cityChoice === VISIT_CITY && p.areaChoice === OTHER && <Field label="Which area?" placeholder="e.g. Shadman" value={p.area} onChange={update('area')} />}
+                      {p.cityChoice && p.cityChoice !== OTHER && p.areaChoice === OTHER && <Field label="Which area?" placeholder="e.g. Shadman" value={p.area} onChange={update('area')} />}
                     </div>
                     {p.cityChoice === OTHER && (
                       <p className="kw-onb-note">
-                        Home visits are only in {VISIT_CITY} at the moment, so we can’t visit {p.city.trim() || 'other cities'} yet. You can still set up your family and keep {p.callThem.trim() || 'their'}
+                        Home visits aren’t available in {p.city.trim() || 'other cities'} yet{served.length ? `: today we visit homes in ${listCities(served)}` : ''}. You can still set up your family and keep {p.callThem.trim() || 'their'}
                         {p.callThem.trim() ? '’s' : ''} lab results and updates in one place.
                       </p>
                     )}
@@ -195,10 +209,17 @@ export function OnboardingView({ step, form, setForm, nutritionists, areas = [],
             <>
               <div className="kw-kicker kw-kicker--teal">Step 4</div>
               <h2 style={{ fontSize: 28, fontWeight: 800 }}>Choose a nutritionist</h2>
-              {nutritionists.length === 0 && <p className="muted">We couldn't load the list right now. You can skip this — we'll match you with someone in your parents' area.</p>}
+              {local.length > 0 && <p className="muted">Nutritionists who visit homes in {firstCity}.</p>}
+              {local.length === 0 && (
+                <p className="kw-onb-note">
+                  {served.includes(firstCity)
+                    ? `There’s no Kinwell nutritionist taking new families in ${firstCity} right now, so you can skip this step. Our team will match you when one is free.`
+                    : `Kinwell doesn’t have nutritionists in ${firstCity || 'that city'} yet, so you can skip this step.`}
+                </p>
+              )}
               <div role="radiogroup" aria-label="Nutritionists" className="stack" style={{ '--gap': '10px' }}>
-                {nutritionists.map((n) => {
-                  const on = (form.nutritionistId ?? nutritionists[0]?.id) === n.id;
+                {local.map((n) => {
+                  const on = (form.nutritionistId ?? local[0]?.id) === n.id;
                   return (
                     <button
                       key={n.id}
@@ -294,6 +315,11 @@ export default function OnboardingPage() {
   const auth = useOptionalAuth();
   const navigate = useNavigate();
   const list = nutritionists.data ?? [];
+  // The default nutritionist is the first one in the first parent's city (none if there is none).
+  const localFor = (f) => {
+    const p = f.parents.find((x) => parentProblem(x) === null);
+    return p ? list.filter((n) => n.city === cityOf(p)) : [];
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -308,11 +334,11 @@ export default function OnboardingPage() {
             name: p.name.trim(),
             callThem: p.callThem.trim(),
             age: Number(p.age),
-            city: p.cityChoice === VISIT_CITY ? VISIT_CITY : p.city.trim(),
-            area: p.cityChoice !== VISIT_CITY ? undefined : p.areaChoice === OTHER ? p.area.trim() || undefined : p.areaChoice || undefined,
+            city: cityOf(p),
+            area: p.cityChoice === OTHER ? undefined : p.areaChoice === OTHER ? p.area.trim() || undefined : p.areaChoice || undefined,
           })),
         invites: form.invites.filter((i) => i.email.trim()),
-        nutritionistId: form.nutritionistId ?? list[0]?.id,
+        nutritionistId: form.nutritionistId ?? localFor(form)[0]?.id,
         health: form.health,
       };
       setSession(await onboardingApi.complete(body));

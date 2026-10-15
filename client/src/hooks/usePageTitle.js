@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export const SITE_TITLE = 'Kinwell · Home nutrition care for parents in Lahore';
+export const SITE_TITLE = 'Kinwell · Home nutrition care for parents in Pakistan';
 
 /** Sets the browser tab title while a page is shown ("Sign in · Kinwell"), and restores it after. */
 export function usePageTitle(title) {

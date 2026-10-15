@@ -54,7 +54,7 @@ export function RescheduleDialog({ open, parent, availability, onClose, onConfir
           )}
           {step === 2 && (
             <div className="stack" style={{ '--gap': '10px' }}>
-              <div className="strong">What time? (Lahore time)</div>
+              <div className="strong">What time? (Pakistan time)</div>
               <div className="row" style={{ '--gap': '8px' }}>
                 {availability.slots.map((s, i) => (
                   <Chip key={s.time} selected={slot === i} disabled={!s.open} onClick={() => setSlot(i)}>

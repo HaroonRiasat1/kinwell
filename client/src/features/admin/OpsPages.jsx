@@ -43,14 +43,17 @@ export function ActivityPage() {
 // ---------- Settings: service areas ----------
 export function AreasView({ areas, onSave, onRemove }) {
   const [edits, setEdits] = useState({});
-  const [adding, setAdding] = useState({ name: '', capacity: '' });
+  const [adding, setAdding] = useState({ city: '', name: '', capacity: '' });
+  const cities = [...new Set(areas.map((a) => a.city))];
   return (
-    <Section title="Service areas">
-      <p className="muted text-sm">Capacity is how many clients the team can look after in each area. Client counts come from parents' addresses.</p>
-      <div className="kw-table-scroll" style={{ '--min': '560px' }}>
-        <div role="table" aria-label="Service areas" style={{ '--cols': 'minmax(0,1.2fr) minmax(0,0.8fr) minmax(0,1fr) minmax(0,1.4fr)' }}>
+    <Section title="Cities and service areas">
+      <p className="muted text-sm">
+        Families can choose any city and area listed here when they sign up. Capacity is how many clients the team can look after in each area; client counts come from parents’ city and area. To open a new city, add its first area.
+      </p>
+      <div className="kw-table-scroll" style={{ '--min': '640px' }}>
+        <div role="table" aria-label="Service areas" style={{ '--cols': 'minmax(0,0.9fr) minmax(0,1.1fr) minmax(0,0.8fr) minmax(0,1fr) minmax(0,1.4fr)' }}>
           <div role="row" className="kw-table__head">
-            {['Area', 'Clients', 'Capacity', ''].map((h, i) => (
+            {['City', 'Area', 'Clients', 'Capacity', ''].map((h, i) => (
               <span key={i} role="columnheader">{h}</span>
             ))}
           </div>
@@ -58,15 +61,16 @@ export function AreasView({ areas, onSave, onRemove }) {
             const value = edits[a.id] ?? String(a.capacity);
             return (
               <div key={a.id} role="row" className="kw-table__row" style={{ fontSize: 16 }}>
+                <span role="cell">{a.city}</span>
                 <span role="cell" className="strong">{a.area}</span>
                 <span role="cell">
                   {a.clients} <StatusTag status={a.status} label={`${a.pct}%`} />
                 </span>
                 <span role="cell">
-                  <input aria-label={`${a.area} capacity`} className="kw-input" type="number" min="0" value={value} onChange={(e) => setEdits((x) => ({ ...x, [a.id]: e.target.value }))} style={{ minHeight: 44, width: 110 }} />
+                  <input aria-label={`${a.city} ${a.area} capacity`} className="kw-input" type="number" min="0" value={value} onChange={(e) => setEdits((x) => ({ ...x, [a.id]: e.target.value }))} style={{ minHeight: 44, width: 110 }} />
                 </span>
                 <span role="cell" className="row" style={{ '--gap': '6px' }}>
-                  <Button size="sm" disabled={value === String(a.capacity) || value === ''} onClick={() => onSave({ id: a.id, name: a.area, capacity: Number(value) })}>
+                  <Button size="sm" disabled={value === String(a.capacity) || value === ''} onClick={() => onSave({ id: a.id, city: a.city, name: a.area, capacity: Number(value) })}>
                     Save
                   </Button>
                   <Button variant="glass" size="sm" onClick={() => onRemove(a)}>
@@ -82,12 +86,18 @@ export function AreasView({ areas, onSave, onRemove }) {
         className="row row--end"
         onSubmit={(e) => {
           e.preventDefault();
-          onSave({ name: adding.name.trim(), capacity: Number(adding.capacity) }).then(() => setAdding({ name: '', capacity: '' }));
+          onSave({ city: adding.city.trim(), name: adding.name.trim(), capacity: Number(adding.capacity) }).then(() => setAdding({ city: adding.city, name: '', capacity: '' }));
         }}
       >
+        <Field label="City" placeholder="e.g. Multan" list="kw-service-cities" value={adding.city} onChange={(e) => setAdding((x) => ({ ...x, city: e.target.value }))} />
+        <datalist id="kw-service-cities">
+          {cities.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
         <Field label="New area" placeholder="e.g. Wapda Town" value={adding.name} onChange={(e) => setAdding((x) => ({ ...x, name: e.target.value }))} />
         <Field label="Capacity" type="number" min="0" value={adding.capacity} onChange={(e) => setAdding((x) => ({ ...x, capacity: e.target.value }))} style={{ width: 120 }} />
-        <Button type="submit" disabled={adding.name.trim().length < 2 || adding.capacity === ''}>
+        <Button type="submit" disabled={adding.city.trim().length < 2 || adding.name.trim().length < 2 || adding.capacity === ''}>
           Add area
         </Button>
       </form>
@@ -117,13 +127,13 @@ export function SettingsPage() {
       {removing && (
         <ConfirmDialog
           open
-          title={`Remove ${removing.area}?`}
+          title={`Remove ${removing.city} · ${removing.area}?`}
           confirmLabel="Remove area"
           tone="danger"
           onClose={() => setRemoving(null)}
           onConfirm={async () => {
             setData(await adminApi.removeArea(removing.id));
-            toast(`${removing.area} removed`);
+            toast(`${removing.city} · ${removing.area} removed`);
           }}
         >
           Only areas with no clients can be removed.

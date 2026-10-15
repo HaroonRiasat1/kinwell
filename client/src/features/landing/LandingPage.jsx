@@ -30,7 +30,7 @@ const WORRIES = [
   },
   {
     q: 'What happens in an emergency?',
-    a: 'Kinwell is not an emergency service. In an emergency, call Rescue 1122. What we do: tell you straight away when a reading means a doctor should see them, and keep their history ready to share.',
+    a: 'Kinwell is not an emergency service. In an emergency, call Rescue 1122 or Edhi (115). What we do: tell you straight away when a reading means a doctor should see them, and keep their history ready to share.',
   },
 ];
 
@@ -51,7 +51,7 @@ const INCLUDED = [
 ];
 
 export const FAQ = [
-  ['Where do you visit?', 'Kinwell nutritionists visit homes across Lahore today, including Model Town, Gulberg, DHA, Johar Town and Cantt. More cities are planned.'],
+  ['Where do you visit?', 'Kinwell nutritionists visit homes in cities across Pakistan, starting with Lahore. When you sign up, you’ll see every city and area we cover today. If your parents live somewhere we don’t visit yet, you can still use Kinwell for their lab results and updates.'],
   ['Who are the nutritionists?', 'Registered dietitians and clinical nutritionists. You can see each one’s experience, languages and the areas they cover before you choose.'],
   ['My parents aren’t good with phones. Will this work?', 'Yes. Their view has one column, large text and one big button per task. They sign in with a six-digit code you can create for them in the app, so there is no password to remember.'],
   ['Can my brothers and sisters see the updates too?', 'Yes. Invite them during setup and choose whether each person can only view, or view and edit.'],
@@ -78,7 +78,7 @@ const GUIDE = [
   ],
   [
     'Have an emergency plan',
-    'Save Rescue 1122 and the nearest hospital in their phone and yours, keep a list of medicines by the door, and make sure someone nearby has a key.',
+    'Save Rescue 1122, Edhi (115) and the nearest hospital in their phone and yours, keep a list of medicines by the door, and make sure someone nearby has a key.',
   ],
 ];
 
@@ -172,8 +172,8 @@ export default function LandingPage() {
       <main>
         <section className="lp-wrap lp-hero">
           <div className="lp-hero__copy">
-            <p className="lp-label">Home nutrition care · Lahore</p>
-            <h1>Looking after your parents in Lahore, from wherever you live.</h1>
+            <p className="lp-label">Home nutrition care · Pakistan</p>
+            <h1>Looking after your parents in Pakistan, from wherever you live.</h1>
             <p className="lp-hero__lead">
               A registered nutritionist visits them at home every four weeks, plans meals from their own kitchen and reads every lab report. You get a clear note after each visit, in your time zone, and an alert only when something needs you.
             </p>
@@ -310,7 +310,7 @@ export default function LandingPage() {
 
         <article id="guide" className="lp-wrap lp-section lp-guide" aria-labelledby="guide-h">
           <p className="lp-label">A practical guide</p>
-          <h2 id="guide-h">How to look after elderly parents in Lahore when you live abroad</h2>
+          <h2 id="guide-h">How to look after elderly parents in Pakistan when you live abroad</h2>
           <p className="lp-guide__intro">
             Caring from a distance takes more than a weekly phone call. Five habits make the biggest difference, whether or not you use Kinwell. None of this replaces their doctor’s advice.
           </p>
@@ -336,7 +336,7 @@ export default function LandingPage() {
             <a href="/login">Sign in</a>
             <a href="/cookies">Cookies</a>
           </nav>
-          <span>© {new Date().getFullYear()} Kinwell · Lahore</span>
+          <span>© {new Date().getFullYear()} Kinwell · Pakistan</span>
         </div>
       </footer>
     </div>

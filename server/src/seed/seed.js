@@ -66,13 +66,15 @@ async function seedPeople() {
     ['usman', 'Usman Tariq', 'Registered dietitian · 6 years', 'Urdu, Punjabi', ['Gulberg', 'Garden Town'], 'Tue 13 Oct', '96%'],
     ['sadia', 'Sadia Malik', 'Registered dietitian · 7 years', 'Urdu, English', ['Johar Town'], 'Thu 15 Oct', '94%'],
     ['faraz', 'Faraz Ahmed', 'Clinical nutritionist · 4 years', 'Urdu, Punjabi', ['Bahria Town'], '19 Oct', '—'],
+    // Kinwell is opening in more cities: one nutritionist in Karachi, no clients yet.
+    ['mehwish', 'Mehwish Siddiqui', 'Registered dietitian · 8 years', 'Urdu, Sindhi, English', ['Clifton', 'DHA'], 'Tue 20 Oct', '—', 'Karachi'],
   ];
-  for (const [key, name, credential, languages, areas, nextOpening, onTimeRate] of team) {
+  for (const [key, name, credential, languages, areas, nextOpening, onTimeRate, city = 'Lahore'] of team) {
     nutritionists[key] = await makeUser({
       name,
       email: `${name.toLowerCase().replace(' ', '.')}@kinwell.pk`,
       role: 'nutritionist',
-      city: 'Lahore',
+      city,
       nutritionist: {
         credential,
         languages,
@@ -489,13 +491,19 @@ async function seedOps(team, rahman, byName, clients) {
   ]);
 
   await ServiceArea.insertMany([
-    { name: 'Model Town', capacity: 15 },
-    { name: 'Gulberg', capacity: 14 },
-    { name: 'Johar Town', capacity: 26 },
-    { name: 'DHA', capacity: 20 },
-    { name: 'Cantt', capacity: 12 },
-    { name: 'Garden Town', capacity: 10 },
-    { name: 'Bahria Town', capacity: 12 },
+    ...[
+      ['Model Town', 15],
+      ['Gulberg', 14],
+      ['Johar Town', 26],
+      ['DHA', 20],
+      ['Cantt', 12],
+      ['Garden Town', 10],
+      ['Bahria Town', 12],
+    ].map(([name, capacity]) => ({ city: 'Lahore', name, capacity })),
+    // Newer cities, smaller teams.
+    { city: 'Karachi', name: 'Clifton', capacity: 8 },
+    { city: 'Karachi', name: 'DHA', capacity: 8 },
+    { city: 'Islamabad', name: 'F-7', capacity: 6 },
   ]);
   await Dish.insertMany(Object.entries(DISHES).map(([code, d]) => ({ code, name: d.n, nut: d.nut, why: d.why, link: d.link, i18n: { ur: ur.dishes[code] } })));
 }

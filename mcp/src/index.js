@@ -37,7 +37,7 @@ const PROMPTS = {
 
 async function main() {
   const api = KinwellClient.fromEnv();
-  const server = new McpServer({ name: 'kinwell', version: '1.0.0' }, { instructions: 'Kinwell is home nutrition care for older parents in Lahore. Tools act as the signed-in account. Results are graded normal / watch / attention. Ask before sending messages or saving changes the user has not asked for.' });
+  const server = new McpServer({ name: 'kinwell', version: '1.0.0' }, { instructions: 'Kinwell is home nutrition care for older parents in Pakistan. Tools act as the signed-in account. Results are graded normal / watch / attention. Ask before sending messages or saving changes the user has not asked for.' });
 
   // Sign in first so only this account's tools are offered. If that fails, offer every tool:
   // the API still refuses anything the account isn't allowed to do, and whoami shows the problem.

@@ -12,6 +12,15 @@ export default {
     Houston: 'ہیوسٹن',
     Manchester: 'مانچسٹر',
     Lahore: 'لاہور',
+    Karachi: 'کراچی',
+    Islamabad: 'اسلام آباد',
+    Rawalpindi: 'راولپنڈی',
+    Faisalabad: 'فیصل آباد',
+    Multan: 'ملتان',
+    Peshawar: 'پشاور',
+    Sialkot: 'سیالکوٹ',
+    Quetta: 'کوئٹہ',
+    Hyderabad: 'حیدرآباد',
   },
   // 11 → "صبح 11 بجے", 16:30 → "شام 4:30 بجے"
   clock(hour24, minutes) {

@@ -1,4 +1,4 @@
-// Kinwell's care happens in Lahore, so "today" is always Lahore's calendar day.
+// Kinwell's care happens in Pakistan (one time zone, PKT), so "today" is always Pakistan's calendar day.
 export const CARE_TIMEZONE = 'Asia/Karachi';
 
 export const todayKey = (date = new Date()) =>

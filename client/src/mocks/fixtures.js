@@ -172,7 +172,7 @@ export const library = {
   markers: MARKER_NAMES,
 };
 
-export const nutritionistsForOnboarding = NUTS.map((n) => ({ id: n.id, name: n.name, credential: n.cred, languages: n.langs, areas: n.areas, next: n.next }));
+export const nutritionistsForOnboarding = NUTS.map((n) => ({ id: n.id, name: n.name, city: 'Lahore', credential: n.cred, languages: n.langs, areas: n.areas, next: n.next }));
 
 const flag = (id, status, type, title, meta, action, link, contact = null) => ({ id, status, type, title, meta, action, link: { kind: null, parent: null, family: null, user: null, visit: null, accessRequest: null, ...link }, contact, notes: [], resolved: false });
 
@@ -208,9 +208,11 @@ export const adminOverview = {
     ['Gulberg', 15, 14],
     ['Johar Town', 23, 26],
     ['Model Town', 8, 15],
-  ].map(([area, c, cap]) => {
+    ['Clifton', 0, 8, 'Karachi'],
+    ['DHA', 0, 8, 'Karachi'],
+  ].map(([area, c, cap, city = 'Lahore']) => {
     const pct = Math.round((c / cap) * 100);
-    return { id: area, area, clients: c, capacity: cap, pct, status: pct > 95 ? 'attention' : pct > 80 ? 'watch' : 'normal' };
+    return { id: `${city}-${area}`, city, area, clients: c, capacity: cap, pct, status: pct > 95 ? 'attention' : pct > 80 ? 'watch' : 'normal' };
   }),
 };
 

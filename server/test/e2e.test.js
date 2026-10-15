@@ -314,8 +314,11 @@ describe('onboarding', () => {
     assert.equal((await call('/onboarding', { method: 'POST', body })).status, 400);
   });
   test('the sign-up form gets the served areas, and a parent in another city keeps that city', async () => {
-    const areas = await ok('/onboarding/areas');
-    assert.ok(areas.includes('Model Town'));
+    const cities = await ok('/onboarding/areas');
+    assert.ok(cities.find((c) => c.city === 'Lahore').areas.includes('Model Town'));
+    assert.ok(cities.find((c) => c.city === 'Karachi').areas.includes('DHA'), 'the same area name can exist in two cities');
+    const team = await ok('/onboarding/nutritionists');
+    assert.ok(team.some((n) => n.city === 'Karachi'));
     const body = {
       you: { name: 'Abroad Family', email: 'abroad.family@example.com', password: 'long-enough-1', city: 'London' },
       parents: [
@@ -328,5 +331,13 @@ describe('onboarding', () => {
     const byName = Object.fromEntries(parents.map((p) => [p.fullName, p]));
     assert.equal(byName['Lahore Parent'].city, 'Lahore');
     assert.equal(byName['Karachi Parent'].city, 'Karachi');
+  });
+  test('an admin can open a new city, and families see it at sign-up', async () => {
+    const after = await ok('/admin/areas', { method: 'PUT', token: T.zara, body: { city: 'Multan', name: 'Cantt', capacity: 5 } });
+    const multan = after.find((a) => a.city === 'Multan' && a.area === 'Cantt');
+    assert.ok(multan, 'Cantt exists in Lahore too, but Multan can have its own');
+    assert.equal((await call('/admin/areas', { method: 'PUT', token: T.zara, body: { city: 'multan', name: 'cantt', capacity: 5 } })).status, 400);
+    assert.ok((await ok('/onboarding/areas')).some((c) => c.city === 'Multan'));
+    await ok(`/admin/areas/${multan.id}`, { method: 'DELETE', token: T.zara });
   });
 });

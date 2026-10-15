@@ -125,9 +125,12 @@ export function AdminOverviewView({ data, flags, setFlags, tab, onTab }) {
             </Button>
           </div>
           {data.coverage.map((c) => (
-            <div key={c.area} className="stack" style={{ '--gap': '6px' }}>
+            <div key={c.id ?? `${c.city}-${c.area}`} className="stack" style={{ '--gap': '6px' }}>
               <div className="row row--between">
-                <span className="strong">{c.area}</span>
+                <span className="strong">
+                  {c.city && <span className="muted">{c.city} · </span>}
+                  {c.area}
+                </span>
                 <span className="row" style={{ '--gap': '8px' }}>
                   <span className="muted" style={{ fontSize: 15 }}>
                     {c.clients}/{c.capacity} clients
@@ -164,7 +167,7 @@ export default function AdminOverviewPage() {
   };
   return (
     <>
-      <PageHeader eyebrow={`${longDate()} · All of Lahore`} title="Operations overview" divider={false}>
+      <PageHeader eyebrow={`${longDate()} · All cities`} title="Operations overview" divider={false}>
         <Button variant="glass" icon="print" onClick={() => window.print()}>
           Print this page
         </Button>

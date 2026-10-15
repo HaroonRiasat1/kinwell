@@ -13,7 +13,7 @@ export const ADMIN_NAV = [
 
 export function AdminShell({ user, children }) {
   return (
-    <AppShell nav={ADMIN_NAV} tabs={ADMIN_NAV} role="admin" home="/admin/overview" person={user && { name: user.name, sub: 'Operations · Lahore' }}>
+    <AppShell nav={ADMIN_NAV} tabs={ADMIN_NAV} role="admin" home="/admin/overview" person={user && { name: user.name, sub: user.city ? `Operations · ${user.city}` : 'Operations' }}>
       {children}
     </AppShell>
   );

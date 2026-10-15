@@ -74,7 +74,7 @@ export default function FamiliesPage() {
   const team = useApi(() => adminApi.team(), []);
   return (
     <>
-      <PageHeader eyebrow="All of Lahore" title="Families" divider={false} />
+      <PageHeader eyebrow="All cities" title="Families" divider={false} />
       {list.error && <EmptyState title="We couldn't load families" action={<Button onClick={list.reload}>Try again</Button>} />}
       {!list.data && !list.error && <SkeletonCard />}
       {list.data && <FamiliesView data={list.data} team={team.data ?? []} filters={filters} setFilter={setFilter} />}

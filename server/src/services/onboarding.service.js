@@ -10,14 +10,20 @@ export async function listNutritionists() {
     name: u.name,
     credential: u.nutritionist?.credential,
     languages: u.nutritionist?.languages,
+    city: u.city || 'Lahore',
     areas: (u.nutritionist?.areas ?? []).join(', '),
     next: u.nutritionist?.nextOpening ? `Next opening: ${u.nutritionist.nextOpening}` : '',
   }));
 }
 
-/** The areas home visits cover (managed by admins in Settings), for the sign-up form. */
+/** Cities with home visits and their areas (managed by admins in Settings), for the sign-up form. */
 export async function listAreas() {
-  return (await ServiceArea.find().sort('name')).map((a) => a.name);
+  const cities = new Map();
+  for (const a of await ServiceArea.find().sort({ city: 1, name: 1 })) {
+    if (!cities.has(a.city)) cities.set(a.city, []);
+    cities.get(a.city).push(a.name);
+  }
+  return [...cities].map(([city, areas]) => ({ city, areas }));
 }
 
 const keyFor = (name) => name.toLowerCase().replace(/[^a-z]+/g, '-').replace(/^-|-$/g, '') || 'parent';

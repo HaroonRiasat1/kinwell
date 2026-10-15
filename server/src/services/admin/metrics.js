@@ -66,19 +66,21 @@ export async function hoursToFamilyUpdate() {
   return gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : null;
 }
 
-const areaOf = (parentArea, areas) => areas.find((a) => (parentArea ?? '').toLowerCase().startsWith(a.name.toLowerCase()));
+const same = (a, b) => (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
+const areaOf = (parent, areas) =>
+  areas.find((a) => same(a.city, parent.city || 'Lahore') && (parent.area ?? '').toLowerCase().startsWith(a.name.toLowerCase()));
 
 /** Each service area with how many current clients live there. */
 export async function areaUsage() {
-  const [areas, parents] = await Promise.all([ServiceArea.find().sort('name'), Parent.find({}, 'area')]);
+  const [areas, parents] = await Promise.all([ServiceArea.find().sort({ city: 1, name: 1 }), Parent.find({}, 'city area')]);
   const counts = new Map(areas.map((a) => [a.id, 0]));
   for (const p of parents) {
-    const a = areaOf(p.area, areas);
+    const a = areaOf(p, areas);
     if (a) counts.set(a.id, counts.get(a.id) + 1);
   }
   return areas.map((a) => {
     const clients = counts.get(a.id);
     const pct = a.capacity ? Math.round((clients / a.capacity) * 100) : 0;
-    return { id: a.id, area: a.name, clients, capacity: a.capacity, pct, status: pct > 95 ? 'attention' : pct > 80 ? 'watch' : 'normal' };
+    return { id: a.id, city: a.city, area: a.name, clients, capacity: a.capacity, pct, status: pct > 95 ? 'attention' : pct > 80 ? 'watch' : 'normal' };
   });
 }

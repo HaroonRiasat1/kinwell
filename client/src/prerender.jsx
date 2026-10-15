@@ -28,8 +28,8 @@ export function structuredData(siteUrl) {
       name: 'Kinwell',
       url: `${siteUrl}/`,
       logo: `${siteUrl}/icon-512.png`,
-      description: 'Home nutrition care for parents in Lahore, with plain-language updates for their families abroad.',
-      areaServed: { '@type': 'City', name: 'Lahore' },
+      description: 'Home nutrition care for parents in Pakistan, with plain-language updates for their families abroad.',
+      areaServed: { '@type': 'Country', name: 'Pakistan' },
     },
     {
       '@context': 'https://schema.org',
@@ -46,8 +46,8 @@ export function structuredData(siteUrl) {
       name: 'Home nutrition care for older parents',
       serviceType: 'Home visits by a registered nutritionist',
       provider: { '@id': `${siteUrl}/#org` },
-      areaServed: ['Model Town', 'Gulberg', 'DHA', 'Johar Town', 'Cantt'].map((name) => ({ '@type': 'Place', name: `${name}, Lahore` })),
-      audience: { '@type': 'Audience', audienceType: 'Families of older adults living in Lahore' },
+      areaServed: { '@type': 'Country', name: 'Pakistan' },
+      audience: { '@type': 'Audience', audienceType: 'Families of older adults living in Pakistan' },
     },
     {
       '@context': 'https://schema.org',

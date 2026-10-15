@@ -36,6 +36,7 @@ export async function list({ q = '' } = {}) {
       return {
         id: u.id,
         name: u.name,
+        city: u.city || 'Lahore',
         area: (u.nutritionist?.areas ?? []).join(', '),
         clients: await Parent.countDocuments({ nutritionist: u.id }),
         week: myWeek.length,
@@ -76,6 +77,7 @@ export async function detail(id) {
     phone: u.phone,
     active: u.active !== false,
     profile: {
+      city: u.city || 'Lahore',
       credential: n.credential ?? '',
       languages: n.languages ?? '',
       areas: n.areas ?? [],
@@ -100,10 +102,10 @@ export async function detail(id) {
   };
 }
 
-export async function create(admin, { name, email, phone, credential, languages, areas }) {
+export async function create(admin, { name, email, phone, credential, languages, city = 'Lahore', areas }) {
   if (await User.exists({ email })) throw ApiError.badRequest('There is already an account with that email.');
   const password = tempPassword();
-  const user = new User({ name, email, phone, role: 'nutritionist', city: 'Lahore', nutritionist: { credential, languages, areas, availability: 'active' } });
+  const user = new User({ name, email, phone, role: 'nutritionist', city, nutritionist: { credential, languages, areas, availability: 'active' } });
   await user.setPassword(password);
   await user.save();
   await record(admin, 'team.create', `Added nutritionist ${name}`, { kind: 'user', id: user._id, label: name });
@@ -114,6 +116,7 @@ export async function update(admin, id, input) {
   const u = await User.findOne({ _id: id, role: 'nutritionist' });
   if (!u) throw ApiError.notFound('Nutritionist not found');
   if (input.phone !== undefined) u.phone = input.phone || undefined;
+  if (input.city) u.city = input.city;
   const n = u.nutritionist ?? {};
   for (const k of ['credential', 'languages', 'areas', 'availability', 'leaveUntil', 'licenceRenewsOn']) {
     if (input[k] !== undefined) n[k] = input[k] || undefined;

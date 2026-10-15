@@ -210,6 +210,16 @@ device**: the file itself is never uploaded.
 
 Results are graded with general adult ranges; have a clinician review `catalogue.js` before real use.
 
+## Cities and service areas
+
+Kinwell visits homes in several Pakistani cities. Admins manage them in **Settings → Cities and
+service areas**: to open a new city, add its first area (the same area name can exist in two
+cities, e.g. DHA in Lahore and Karachi). Sign-up lists those cities and their areas, offers the
+nutritionists who work in the parent's city, and lets families in other cities sign up for records
+and lab reports with a clear note that visits aren't available there yet. Pakistan has one time
+zone, so all visit times are Pakistan time. Older data (no city) is updated to Lahore automatically
+when the server starts (`server/src/config/migrations.js`).
+
 ## Guided tours
 
 Each role gets a short tour the first time they reach their home screen, and again whenever they

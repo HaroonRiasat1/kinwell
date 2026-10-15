@@ -53,7 +53,9 @@ export function NutritionistsView({ rows, q, onQuery }) {
 }
 
 export function AddNutritionistDialog({ areas, onClose, onCreated }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', credential: '', languages: 'Urdu, English', areas: [] });
+  const cities = [...new Set(areas.map((a) => a.city))];
+  const [form, setForm] = useState({ name: '', email: '', phone: '', credential: '', languages: 'Urdu, English', city: cities[0] ?? '', areas: [] });
+  const cityAreas = areas.filter((a) => a.city === form.city).map((a) => a.area);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -82,11 +84,14 @@ export function AddNutritionistDialog({ areas, onClose, onCreated }) {
           <Field label="Phone" type="tel" dir="ltr" value={form.phone} onChange={set('phone')} />
           <Field label="Qualification" placeholder="Registered dietitian · 5 years" value={form.credential} onChange={set('credential')} required />
         </div>
-        <Field label="Languages" value={form.languages} onChange={set('languages')} />
+        <div className="grid-auto" style={{ '--min': '220px', '--gap': '12px' }}>
+          <Field label="Languages" value={form.languages} onChange={set('languages')} />
+          <Field as="select" label="City" options={cities} value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value, areas: [] }))} />
+        </div>
         <div className="stack" style={{ '--gap': '8px' }}>
-          <span className="strong text-sm">Areas they cover</span>
+          <span className="strong text-sm">Areas they cover in {form.city}</span>
           <div className="row" style={{ '--gap': '8px' }}>
-            {areas.map((a) => (
+            {cityAreas.map((a) => (
               <Chip key={a} selected={form.areas.includes(a)} onClick={() => toggleArea(a)}>
                 {a}
               </Chip>
@@ -117,7 +122,7 @@ export default function NutritionistsPage() {
   const areas = useApi(() => adminApi.areas(), []);
   return (
     <>
-      <PageHeader eyebrow="All of Lahore" title="Nutritionists" divider={false}>
+      <PageHeader eyebrow="All cities" title="Nutritionists" divider={false}>
         <Button icon="plus" onClick={() => setAdding(true)}>
           Add nutritionist
         </Button>
@@ -127,7 +132,7 @@ export default function NutritionistsPage() {
       {list.data && <NutritionistsView rows={list.data} q={q} onQuery={setQ} />}
       {adding && (
         <AddNutritionistDialog
-          areas={(areas.data ?? []).map((a) => a.area)}
+          areas={areas.data ?? []}
           onClose={() => setAdding(false)}
           onCreated={(r, name) => {
             setAdding(false);

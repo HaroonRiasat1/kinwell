@@ -224,7 +224,7 @@ export function AdminOverview() {
   const [tab, setTab] = useState('open');
   return (
     <AdminShell user={fx.ZARA}>
-      <PageHeader eyebrow="Saturday 10 October · All of Lahore" title="Operations overview" divider={false} />
+      <PageHeader eyebrow="Saturday 10 October · All cities" title="Operations overview" divider={false} />
       <AdminOverviewView data={fx.adminOverview} flags={flags} setFlags={setFlags} tab={tab} onTab={setTab} />
     </AdminShell>
   );
@@ -233,7 +233,7 @@ export function AdminTeam() {
   const [q, setQ] = useState('');
   return (
     <AdminShell user={fx.ZARA}>
-      <PageHeader eyebrow="All of Lahore" title="Nutritionists" divider={false} />
+      <PageHeader eyebrow="All cities" title="Nutritionists" divider={false} />
       <NutritionistsView rows={fx.team.filter((t) => t.name.toLowerCase().includes(q.toLowerCase()))} q={q} onQuery={setQ} />
     </AdminShell>
   );
@@ -242,7 +242,7 @@ export function AdminFamilies() {
   const [filters, setFilters] = useState({ q: '', status: '', nutritionist: '', page: 1 });
   return (
     <AdminShell user={fx.ZARA}>
-      <PageHeader eyebrow="All of Lahore" title="Families" divider={false} />
+      <PageHeader eyebrow="All cities" title="Families" divider={false} />
       <FamiliesView data={fx.families} team={fx.team} filters={filters} setFilter={(p) => setFilters((f) => ({ ...f, ...p }))} />
     </AdminShell>
   );
@@ -264,8 +264,8 @@ export const AdminSettings = () => (
 const FILLED = () => {
   const f = initialOnboarding();
   f.you = { name: 'Sana Rahman', email: 'sana.rahman@gmail.com', password: 'a-long-password', city: 'London' };
-  f.parents[0] = { ...f.parents[0], name: 'Fatima Rahman', age: '72', areaChoice: 'Model Town' };
-  f.parents[1] = { ...f.parents[1], name: 'Tariq Rahman', age: '76', areaChoice: 'Model Town' };
+  f.parents[0] = { ...f.parents[0], name: 'Fatima Rahman', age: '72', cityChoice: 'Lahore', areaChoice: 'Model Town' };
+  f.parents[1] = { ...f.parents[1], name: 'Tariq Rahman', age: '76', cityChoice: 'Lahore', areaChoice: 'Model Town' };
   f.invites[0].email = 'bilal.rahman@gmail.com';
   return f;
 };
@@ -278,7 +278,10 @@ export function Onboarding({ step: initial = 0 }) {
       form={form}
       setForm={setForm}
       nutritionists={fx.nutritionistsForOnboarding}
-      areas={['Cantt', 'DHA', 'Gulberg', 'Johar Town', 'Model Town']}
+      areas={[
+        { city: 'Karachi', areas: ['Clifton', 'DHA'] },
+        { city: 'Lahore', areas: ['Cantt', 'DHA', 'Gulberg', 'Johar Town', 'Model Town'] },
+      ]}
       busy={false}
       error={null}
       onBack={() => setStep((s) => Math.max(0, s - 1))}

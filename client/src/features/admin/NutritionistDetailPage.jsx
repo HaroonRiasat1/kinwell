@@ -17,6 +17,8 @@ function ProfileForm({ data, areas, onSaved }) {
   useEffect(() => setForm({ ...data.profile, phone: data.phone ?? '', leaveUntil: dateInput(data.profile.leaveUntil), licenceRenewsOn: dateInput(data.profile.licenceRenewsOn) }), [data]);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const toggleArea = (a) => setForm((f) => ({ ...f, areas: f.areas.includes(a) ? f.areas.filter((x) => x !== a) : [...f.areas, a] }));
+  const cities = [...new Set([...areas.map((a) => a.city), form.city].filter(Boolean))];
+  const cityAreas = areas.filter((a) => a.city === form.city).map((a) => a.area);
   const save = async (e) => {
     e.preventDefault();
     setBusy(true);
@@ -37,11 +39,12 @@ function ProfileForm({ data, areas, onSaved }) {
         <Field label="Languages" value={form.languages} onChange={set('languages')} />
         <Field label="Phone" type="tel" dir="ltr" value={form.phone} onChange={set('phone')} />
         <Field label="Licence renews on" type="date" value={form.licenceRenewsOn} onChange={set('licenceRenewsOn')} />
+        <Field as="select" label="City" options={cities} value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value, areas: [] }))} />
       </div>
       <div className="stack" style={{ '--gap': '8px' }}>
-        <span className="strong text-sm">Areas</span>
+        <span className="strong text-sm">Areas in {form.city}</span>
         <div className="row" style={{ '--gap': '8px' }}>
-          {[...new Set([...areas, ...form.areas])].map((a) => (
+          {[...new Set([...cityAreas, ...form.areas])].map((a) => (
             <Chip key={a} selected={form.areas.includes(a)} onClick={() => toggleArea(a)}>
               {a}
             </Chip>
@@ -213,7 +216,7 @@ export default function NutritionistDetailPage() {
       </PageHeader>
       {error && <EmptyState title="We couldn't load this nutritionist" action={<Button onClick={reload}>Try again</Button>} />}
       {!data && !error && <SkeletonCard minHeight={400} />}
-      {data && <NutritionistDetailView data={data} areas={(areas.data ?? []).map((a) => a.area)} onChange={setData} />}
+      {data && <NutritionistDetailView data={data} areas={areas.data ?? []} onChange={setData} />}
     </>
   );
 }
